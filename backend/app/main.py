@@ -154,12 +154,18 @@ app.add_middleware(
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
-# Include API Routers
+# Include API Routers with /api prefix AND root / prefix for universal router matching
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(requisitions.router, prefix=settings.API_V1_STR)
 app.include_router(applications.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.ws_router, prefix=settings.API_V1_STR)
+
+app.include_router(auth.router)
+app.include_router(requisitions.router)
+app.include_router(applications.router)
+app.include_router(notifications.router)
+app.include_router(notifications.ws_router)
 
 # Mount Built React Frontend Dist Bundle for Full-Stack Cloud Serving
 from fastapi.responses import FileResponse
