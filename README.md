@@ -113,9 +113,8 @@ npm run dev
 
 ---
 
-## 🔐 Test Credentials
+## 🔐 Authentication & Access Control
 
-| User Role | Email | Password | Access Rights |
-|---|---|---|---|
-| **System Admin** | `admin@talentbridge.com` | `Admin@123` | Create/edit/publish jobs, view applications grid, download resumes, export CSV |
-| **Candidate** | `priya.sharma@example.com` | `Candidate@123` | Browse jobs, submit multi-step application, track application status |
+- **Candidate Portal**: Passwordless Real-Time Email OTP Verification (No password required).
+- **Admin Console**: Authenticated via configured system credentials.
+
