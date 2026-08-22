@@ -10,6 +10,122 @@ from app.api import auth, requisitions, applications, notifications
 # Initialize database tables on application startup
 Base.metadata.create_all(bind=engine)
 
+def auto_seed_db():
+    try:
+        from app.core.database import SessionLocal
+        from app.models.domain import User, JobRequisition
+        from app.core.security import get_password_hash
+        import datetime
+
+        db = SessionLocal()
+        # Seed Admin if not exists
+        admin = db.query(User).filter(User.role == "admin").first()
+        if not admin:
+            admin = User(
+                email="admin@talentbridge.com",
+                password_hash=get_password_hash("Admin@123"),
+                first_name="Admin",
+                last_name="",
+                role="admin"
+            )
+            db.add(admin)
+            db.commit()
+
+        # Seed Jobs if no requisitions exist
+        if db.query(JobRequisition).count() == 0:
+            now = datetime.datetime.utcnow()
+            default_jobs = [
+                JobRequisition(
+                    requisition_id="REQ-2026-00101",
+                    job_title="Senior Python & AI Engineer",
+                    department="Engineering",
+                    location="Bangalore, India",
+                    employment_type="Full-time",
+                    experience_range="4-7 years",
+                    openings=3,
+                    hiring_manager="Admin",
+                    max_salary_budget="₹2,500,000 - ₹3,500,000 PA",
+                    hiring_target_date="2026-10-31",
+                    job_description="We are seeking an experienced Senior Python Developer with expertise in FastAPI, SQLAlchemy, and LLM orchestration to lead core backend architectural services.",
+                    status="Published",
+                    created_at=now,
+                    posted_at=now
+                ),
+                JobRequisition(
+                    requisition_id="REQ-2026-00201",
+                    job_title="Junior Python & AI Trainee (Fresher)",
+                    department="Engineering",
+                    location="Pune, India",
+                    employment_type="Full-time",
+                    experience_range="Fresher (0-1 year)",
+                    openings=5,
+                    hiring_manager="Admin",
+                    max_salary_budget="₹600,000 - ₹900,000 PA",
+                    hiring_target_date="2026-11-15",
+                    job_description="Exciting entry-level role for fresh computer science graduates. Receive hands-on training in Python microservices, FastAPI, and AI integration.",
+                    status="Published",
+                    created_at=now,
+                    posted_at=now
+                ),
+                JobRequisition(
+                    requisition_id="REQ-2026-00202",
+                    job_title="Graduate Engineer Trainee - Full Stack React",
+                    department="Engineering",
+                    location="Hyderabad, India",
+                    employment_type="Full-time",
+                    experience_range="Fresher (0-1 year)",
+                    openings=4,
+                    hiring_manager="Admin",
+                    max_salary_budget="₹550,000 - ₹850,000 PA",
+                    hiring_target_date="2026-11-15",
+                    job_description="Great opportunity for entry-level developers passionate about modern frontend engineering with React, JavaScript, Vite, and Tailwind CSS.",
+                    status="Published",
+                    created_at=now,
+                    posted_at=now
+                ),
+                JobRequisition(
+                    requisition_id="REQ-2026-00203",
+                    job_title="Associate Data Analyst - Fresher Batch 2026",
+                    department="Data Science",
+                    location="Chennai, India",
+                    employment_type="Full-time",
+                    experience_range="Fresher (0-1 year)",
+                    openings=3,
+                    hiring_manager="Admin",
+                    max_salary_budget="₹650,000 - ₹950,000 PA",
+                    hiring_target_date="2026-11-15",
+                    job_description="Analyze datasets, build SQL queries, and construct interactive performance dashboards for enterprise candidate sourcing pipelines.",
+                    status="Published",
+                    created_at=now,
+                    posted_at=now
+                ),
+                JobRequisition(
+                    requisition_id="REQ-2026-00204",
+                    job_title="Junior QA & Software Tester (Fresher)",
+                    department="Engineering",
+                    location="Kolkata, India",
+                    employment_type="Full-time",
+                    experience_range="Fresher (0-1 year)",
+                    openings=2,
+                    hiring_manager="Admin",
+                    max_salary_budget="₹500,000 - ₹750,000 PA",
+                    hiring_target_date="2026-11-15",
+                    job_description="Entry-level quality assurance position focusing on automated API testing, regression test suites, and UI user flow verification.",
+                    status="Published",
+                    created_at=now,
+                    posted_at=now
+                )
+            ]
+            for job in default_jobs:
+                db.add(job)
+            db.commit()
+            print("[AUTO SEED] Default job requisitions created successfully.")
+        db.close()
+    except Exception as e:
+        print(f"[AUTO SEED ERROR] {e}")
+
+auto_seed_db()
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Candidate Sourcing System API - Job Requisitions, Candidate Applications & Real-time Tracking",
