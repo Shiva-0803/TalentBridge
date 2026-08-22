@@ -1,6 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:8000/api';
+    }
+    return `${window.location.origin}/api`;
+  }
+  return 'http://localhost:8000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -24,135 +36,137 @@ api.interceptors.request.use(
 // Auth Service
 export const authService = {
   sendOtp: async (email) => {
-    const res = await api.post('/auth/send-otp', { email });
-    return res.data;
+    const response = await api.post('/auth/send-otp', { email });
+    return response.data;
   },
-  verifyOtp: async (email, otpCode, firstName = null, lastName = null, mobile = null) => {
-    const res = await api.post('/auth/verify-otp', {
-      email,
-      otp_code: otpCode,
-      first_name: firstName,
-      last_name: lastName,
-      mobile: mobile,
-    });
-    return res.data;
+  verifyOtp: async (email, otp_code, first_name = '', mobile = '') => {
+    const payload = { email, otp_code };
+    if (first_name) payload.first_name = first_name;
+    if (mobile) payload.mobile = mobile;
+    const response = await api.post('/auth/verify-otp', payload);
+    return response.data;
   },
   adminLogin: async (email, password) => {
-    const res = await api.post('/auth/admin-login', { email, password });
-    return res.data;
-  },
-  login: async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
-    return res.data;
-  },
-  register: async (userData) => {
-    const res = await api.post('/auth/register', userData);
-    return res.data;
+    const response = await api.post('/auth/admin/login', { email, password });
+    return response.data;
   },
   getMe: async () => {
-    const res = await api.get('/auth/me');
-    return res.data;
+    const response = await api.get('/auth/me');
+    return response.data;
   },
 };
 
 // Requisitions Service
-export const requisitionService = {
-  getPublicRequisitions: async (params = {}) => {
-    const res = await api.get('/requisitions/public', { params });
-    return res.data;
+export const requisitionsService = {
+  getPublicList: async (params = {}) => {
+    const response = await api.get('/requisitions/public', { params });
+    return response.data;
   },
-  getFilterOptions: async () => {
-    const res = await api.get('/requisitions/public/filters');
-    return res.data;
+  getPublicFilters: async () => {
+    const response = await api.get('/requisitions/public/filters');
+    return response.data;
   },
-  getPublicRequisitionDetail: async (reqId) => {
-    const res = await api.get(`/requisitions/public/${reqId}`);
-    return res.data;
+  getPublicDetail: async (id) => {
+    const response = await api.get(`/requisitions/public/${id}`);
+    return response.data;
   },
-  getAdminRequisitions: async () => {
-    const res = await api.get('/requisitions/admin/all');
-    return res.data;
+  getAdminList: async (params = {}) => {
+    const response = await api.get('/requisitions/admin', { params });
+    return response.data;
   },
-  createRequisition: async (reqData) => {
-    const res = await api.post('/requisitions/admin', reqData);
-    return res.data;
+  getAdminDetail: async (id) => {
+    const response = await api.get(`/requisitions/admin/${id}`);
+    return response.data;
   },
-  updateRequisition: async (id, reqData) => {
-    const res = await api.put(`/requisitions/admin/${id}`, reqData);
-    return res.data;
+  create: async (data) => {
+    const response = await api.post('/requisitions/admin', data);
+    return response.data;
   },
-  duplicateRequisition: async (id) => {
-    const res = await api.post(`/requisitions/admin/${id}/duplicate`);
-    return res.data;
+  update: async (id, data) => {
+    const response = await api.put(`/requisitions/admin/${id}`, data);
+    return response.data;
   },
-  updateStatus: async (id, status) => {
-    const res = await api.patch(`/requisitions/admin/${id}/status?status_val=${status}`);
-    return res.data;
+  clone: async (id) => {
+    const response = await api.post(`/requisitions/admin/${id}/clone`);
+    return response.data;
   },
   deleteRequisition: async (id) => {
-    const res = await api.delete(`/requisitions/admin/${id}`);
-    return res.data;
+    const response = await api.delete(`/requisitions/admin/${id}`);
+    return response.data;
   },
 };
 
 // Applications Service
-export const applicationService = {
+export const applicationsService = {
   submitApplication: async (formData) => {
-    const res = await api.post('/applications', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const response = await api.post('/applications', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
-    return res.data;
+    return response.data;
   },
   getMyApplications: async () => {
-    const res = await api.get('/applications/my');
-    return res.data;
+    const response = await api.get('/applications/my-applications');
+    return response.data;
   },
-  getAdminApplicationsGrid: async (params = {}) => {
-    const res = await api.get('/applications/admin/grid', { params });
-    return res.data;
-  },
-  getFullApplicationDetail: async (appId) => {
-    const res = await api.get(`/applications/admin/detail/${appId}`);
-    return res.data;
-  },
-  updateApplicationStatus: async (appId, status) => {
-    const res = await api.patch(`/applications/admin/${appId}/status`, { status });
-    return res.data;
-  },
-  getResumeDownloadUrl: (appId) => {
-    return `${API_BASE_URL}/applications/resume/${appId}`;
-  },
-  getExportCsvUrl: (reqId = null) => {
-    return `${API_BASE_URL}/applications/admin/export-csv${reqId ? `?requisition_id=${reqId}` : ''}`;
-  },
-  updateResume: async (appId, file) => {
-    const formData = new FormData();
-    formData.append('resume_file', file);
-    const res = await api.put(`/applications/resume/${appId}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+  updateResume: async (appId, formData) => {
+    const response = await api.put(`/applications/resume/${appId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
-    return res.data;
+    return response.data;
+  },
+  getAdminGrid: async (params = {}) => {
+    const response = await api.get('/applications/admin/grid', { params });
+    return response.data;
+  },
+  getAdminDetail: async (id) => {
+    const response = await api.get(`/applications/admin/${id}`);
+    return response.data;
+  },
+  updateStatus: async (id, status) => {
+    const response = await api.put(`/applications/admin/${id}/status`, { status });
+    return response.data;
+  },
+  exportCsv: async (params = {}) => {
+    const response = await api.get('/applications/admin/export-csv', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+  getResumeUrl: (filename) => {
+    if (!filename) return '#';
+    if (filename.startsWith('http')) return filename;
+    const baseHost = API_BASE_URL.replace('/api', '');
+    return `${baseHost}/uploads/${filename}`;
   },
 };
 
 // Notifications Service
-export const notificationService = {
-  getNotifications: async () => {
-    const res = await api.get('/notifications');
-    return res.data;
+export const notificationsService = {
+  getList: async () => {
+    const response = await api.get('/notifications');
+    return response.data;
   },
   getUnreadCount: async () => {
-    const res = await api.get('/notifications/unread-count');
-    return res.data;
+    const response = await api.get('/notifications/unread-count');
+    return response.data;
   },
-  markAsRead: async (id) => {
-    const res = await api.patch(`/notifications/${id}/read`);
-    return res.data;
+  markRead: async (id) => {
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
   },
-  markAllAsRead: async () => {
-    const res = await api.patch('/notifications/read-all');
-    return res.data;
+  markAllRead: async () => {
+    const response = await api.put('/notifications/read-all');
+    return response.data;
   },
 };
+
+export const requisitionService = requisitionsService;
+export const applicationService = applicationsService;
+export const notificationService = notificationsService;
 
 export default api;
