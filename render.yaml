@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: talentbridge-api
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SMTP_SERVER
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        value: banglore2122@gmail.com
+      - key: SMTP_PASSWORD
+        value: ihetqztrispkxwip
+      - key: SECRET_KEY
+        value: talentbridge_jwt_secret_key_2026
+      - key: DATABASE_URL
+        value: sqlite:///./candidate_sourcing.db
