@@ -4,7 +4,7 @@ services:
     env: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: SMTP_SERVER
         value: smtp.gmail.com
@@ -16,5 +16,3 @@ services:
         value: ihetqztrispkxwip
       - key: SECRET_KEY
         value: talentbridge_jwt_secret_key_2026
-      - key: DATABASE_URL
-        value: sqlite:///./candidate_sourcing.db
