@@ -1,0 +1,46 @@
+# Security: Exclude environment variable files containing SMTP / secret credentials
+.env
+.env.local
+.env.*
+*.env
+backend/.env
+frontend/.env
+
+# Python Bytecode & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+ENV/
+env/
+
+# Node.js Dependencies & Build Output
+node_modules/
+frontend/node_modules/
+dist/
+build/
+frontend/dist/
+.output/
+
+# Local SQLite Database Files
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+backend/*.sqlite
+
+# Uploaded Candidate CV files & Scratch Logs
+uploads/
+backend/uploads/
+scratch/
+*.log
+
+# IDE & OS System Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
