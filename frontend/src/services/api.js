@@ -47,7 +47,7 @@ export const authService = {
     return response.data;
   },
   adminLogin: async (email, password) => {
-    const response = await api.post('/auth/admin/login', { email, password });
+    const response = await api.post('/auth/admin-login', { email, password });
     return response.data;
   },
   getMe: async () => {
