@@ -12,8 +12,8 @@ except ImportError:
 
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "banglore2122@gmail.com")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "ihetqztrispkxwip")
 
 def send_otp_email(to_email: str, otp_code: str):
     subject = "Your TalentBridge Login Verification Code"
