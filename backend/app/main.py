@@ -1,10 +1,24 @@
 import os
+import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import engine, Base, SessionLocal
+from app.core.security import get_password_hash
+
+# CRITICAL FIX: Import all domain models BEFORE calling Base.metadata.create_all
+from app.models.domain import (
+    User,
+    CandidateProfile,
+    JobRequisition,
+    Application,
+    EducationRecord,
+    WorkExperienceRecord,
+    Notification
+)
+
 from app.api import auth, requisitions, applications, notifications
 
 # Initialize database tables on application startup
@@ -12,11 +26,6 @@ Base.metadata.create_all(bind=engine)
 
 def auto_seed_db():
     try:
-        from app.core.database import SessionLocal
-        from app.models.domain import User, JobRequisition
-        from app.core.security import get_password_hash
-        import datetime
-
         db = SessionLocal()
         # Seed Admin if not exists
         admin = db.query(User).filter(User.role == "admin").first()
