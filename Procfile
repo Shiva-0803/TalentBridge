@@ -1,1 +1,1 @@
-web: cd backend && sh -c "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+web: cd backend && gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app
