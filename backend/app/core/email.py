@@ -10,10 +10,92 @@ try:
 except ImportError:
     pass
 
+import json
+import urllib.request
+
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "banglore2122@gmail.com")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "ihetqztrispkxwip")
+
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
+
+def send_via_http_api(to_email: str, subject: str, body_text: str):
+    """
+    Sends transactional email over HTTPS (Port 443) using HTTP REST APIs.
+    Bypasses cloud provider raw SMTP socket blocks (such as Render Errno 101).
+    """
+    # 1. Try Brevo (Sendinblue) HTTP API
+    if BREVO_API_KEY:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+                "api-key": BREVO_API_KEY
+            }
+            payload = {
+                "sender": {"name": "TalentBridge Careers", "email": SMTP_USERNAME or "careers@talentbridge.com"},
+                "to": [{"email": to_email}],
+                "subject": subject,
+                "textContent": body_text
+            }
+            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as res:
+                if res.status in [200, 201, 202]:
+                    print(f"[HTTP API SUCCESS] Brevo email delivered to {to_email}")
+                    return True, "Email sent via Brevo HTTPS API"
+        except Exception as e:
+            print(f"[HTTP API WARN] Brevo API error: {e}")
+
+    # 2. Try Resend HTTP API
+    if RESEND_API_KEY:
+        try:
+            url = "https://api.resend.com/emails"
+            headers = {
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "from": "TalentBridge <onboarding@resend.dev>",
+                "to": [to_email],
+                "subject": subject,
+                "text": body_text
+            }
+            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as res:
+                if res.status in [200, 201, 202]:
+                    print(f"[HTTP API SUCCESS] Resend email delivered to {to_email}")
+                    return True, "Email sent via Resend HTTPS API"
+        except Exception as e:
+            print(f"[HTTP API WARN] Resend API error: {e}")
+
+    # 3. Try SendGrid HTTP API
+    if SENDGRID_API_KEY:
+        try:
+            url = "https://api.sendgrid.com/v3/mail/send"
+            headers = {
+                "Authorization": f"Bearer {SENDGRID_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "personalizations": [{"to": [{"email": to_email}]}],
+                "from": {"email": SMTP_USERNAME or "careers@talentbridge.com", "name": "TalentBridge"},
+                "subject": subject,
+                "content": [{"type": "text/plain", "value": body_text}]
+            }
+            req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as res:
+                if res.status in [200, 201, 202]:
+                    print(f"[HTTP API SUCCESS] SendGrid email delivered to {to_email}")
+                    return True, "Email sent via SendGrid HTTPS API"
+        except Exception as e:
+            print(f"[HTTP API WARN] SendGrid API error: {e}")
+
+    return False, "No HTTP API key configured or API calls failed"
+
 
 def send_otp_email(to_email: str, otp_code: str):
     subject = "Your TalentBridge Login Verification Code"
@@ -30,6 +112,12 @@ Best regards,
 TalentBridge HR Team
 """
 
+    # 1. Try HTTPS HTTP API first (Port 443 - never blocked by Render)
+    http_success, http_msg = send_via_http_api(to_email, subject, body)
+    if http_success:
+        return True, http_msg
+
+    # 2. Try Raw SMTP (Ports 587 / 465)
     if SMTP_USERNAME and SMTP_PASSWORD:
         msg = MIMEMultipart()
         msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
@@ -37,7 +125,6 @@ TalentBridge HR Team
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
 
-        # Try Port 587 TLS first; fallback to Port 465 SSL if TLS fails or times out
         try:
             try:
                 server = smtplib.SMTP(SMTP_SERVER, 587, timeout=10)
@@ -60,6 +147,8 @@ TalentBridge HR Team
         except Exception as e:
             err_str = str(e)
             print(f"[SMTP ERROR] {err_str}")
+            if "Network is unreachable" in err_str or "101" in err_str or "111" in err_str:
+                return False, "Render cloud platform blocks raw outbound SMTP ports (587/465). Please add BREVO_API_KEY or RESEND_API_KEY to Render Environment Variables for HTTPS email delivery."
             return False, f"Email delivery error: {err_str}"
     else:
         print(f"[LOG ONLY] OTP for {to_email}: {otp_code}")
@@ -116,6 +205,12 @@ TalentBridge Talent Acquisition Team
 This is an automated confirmation email. Please do not reply.
 """
 
+    # 1. Try HTTPS HTTP API first
+    http_success, http_msg = send_via_http_api(to_email, subject, body)
+    if http_success:
+        return True, http_msg
+
+    # 2. Try Raw SMTP
     if SMTP_USERNAME and SMTP_PASSWORD:
         msg = MIMEMultipart()
         msg['From'] = f"TalentBridge Careers <{SMTP_USERNAME}>"
