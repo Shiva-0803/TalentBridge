@@ -410,6 +410,7 @@ def get_full_candidate_application(
         ]
     }
 
+@router.put("/admin/{app_id}/status")
 @router.patch("/admin/{app_id}/status")
 def update_application_status(
     app_id: int,
@@ -448,6 +449,7 @@ def update_application_status(
     return {"message": "Status updated successfully", "id": app_id, "status": app.status}
 
 @router.get("/resume/{app_id}")
+@router.get("/admin/resume/{app_id}")
 def download_resume(
     app_id: int,
     db: Session = Depends(get_db)
