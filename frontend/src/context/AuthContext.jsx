@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   const fetchNotifications = async () => {
     try {
       const [list, countRes] = await Promise.all([
-        notificationService.getNotifications(),
+        notificationService.getList(),
         notificationService.getUnreadCount()
       ]);
       setNotifications(list);
@@ -54,7 +54,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    const wsUrl = `ws://localhost:8000/api/ws/notifications/${user.id}`;
+    // Build WebSocket URL dynamically (works on both localhost and Render)
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'localhost:8000'
+      : window.location.host;
+    const wsUrl = `${wsProtocol}//${wsHost}/api/ws/notifications/${user.id}`;
     let socket;
 
     try {

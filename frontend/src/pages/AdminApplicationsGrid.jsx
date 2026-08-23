@@ -23,12 +23,12 @@ export default function AdminApplicationsGrid() {
     setLoading(true);
     try {
       const [gridData, reqData] = await Promise.all([
-        applicationService.getAdminApplicationsGrid({
+        applicationService.getAdminGrid({
           requisition_id: selectedReqId || null,
           search,
           status_filter: statusFilter
         }),
-        requisitionService.getAdminRequisitions()
+        requisitionService.getAdminList()
       ]);
       setApplications(gridData);
       setRequisitions(reqData);
@@ -52,7 +52,7 @@ export default function AdminApplicationsGrid() {
 
   const handleStatusChange = async (appId, newStatus) => {
     try {
-      await applicationService.updateApplicationStatus(appId, newStatus);
+      await applicationService.updateStatus(appId, newStatus);
       fetchGridData();
     } catch (err) {
       alert('Failed to update application status.');
@@ -62,7 +62,7 @@ export default function AdminApplicationsGrid() {
   const handleViewFullDetail = async (appId) => {
     setLoadingDetail(true);
     try {
-      const data = await applicationService.getFullApplicationDetail(appId);
+      const data = await applicationService.getAdminDetail(appId);
       setSelectedAppDetail(data);
     } catch (err) {
       alert('Failed to load candidate application detail.');
@@ -204,7 +204,7 @@ export default function AdminApplicationsGrid() {
                       {/* Direct Resume View / Download link matching Wireframe 8.8 */}
                       <td className="py-4 px-4">
                         <a
-                          href={applicationService.getResumeDownloadUrl(app.id)}
+                          href={applicationService.getResumeUrl(app.id)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
@@ -368,7 +368,7 @@ export default function AdminApplicationsGrid() {
               {/* Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                 <a
-                  href={applicationService.getResumeDownloadUrl(selectedAppDetail.id)}
+                  href={applicationService.getResumeUrl(selectedAppDetail.id)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs"

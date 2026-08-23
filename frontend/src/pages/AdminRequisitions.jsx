@@ -32,7 +32,7 @@ export default function AdminRequisitions() {
   const fetchRequisitions = async () => {
     setLoading(true);
     try {
-      const data = await requisitionService.getAdminRequisitions();
+      const data = await requisitionService.getAdminList();
       setRequisitions(data);
     } catch (err) {
       console.error(err);
@@ -94,9 +94,9 @@ export default function AdminRequisitions() {
 
     try {
       if (editingId) {
-        await requisitionService.updateRequisition(editingId, payload);
+        await requisitionService.update(editingId, payload);
       } else {
-        await requisitionService.createRequisition(payload);
+        await requisitionService.create(payload);
       }
       setShowModal(false);
       fetchRequisitions();
@@ -109,7 +109,7 @@ export default function AdminRequisitions() {
 
   const handleDuplicate = async (id) => {
     try {
-      await requisitionService.duplicateRequisition(id);
+      await requisitionService.clone(id);
       fetchRequisitions();
     } catch (err) {
       alert('Failed to clone requisition.');
@@ -118,7 +118,11 @@ export default function AdminRequisitions() {
 
   const handleStatusToggle = async (id, newStatus) => {
     try {
-      await requisitionService.updateStatus(id, newStatus);
+      // Get existing requisition and update only status
+      const existing = requisitions.find(r => r.id === id);
+      if (existing) {
+        await requisitionService.update(id, { ...existing, status: newStatus });
+      }
       fetchRequisitions();
     } catch (err) {
       alert('Failed to change status.');

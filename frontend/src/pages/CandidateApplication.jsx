@@ -72,7 +72,7 @@ export default function CandidateApplication() {
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const data = await requisitionService.getPublicRequisitionDetail(reqId);
+        const data = await requisitionService.getPublicDetail(reqId);
         setJob(data);
       } catch (err) {
         setError('Job opening not found or no longer accepting applications.');

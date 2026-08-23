@@ -19,7 +19,7 @@ export default function PublicJobList() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const data = await requisitionService.getPublicRequisitions({
+      const data = await requisitionService.getPublicList({
         search,
         department: selectedDept,
         location: selectedLoc,
@@ -35,7 +35,7 @@ export default function PublicJobList() {
 
   const fetchFilterOptions = async () => {
     try {
-      const opts = await requisitionService.getFilterOptions();
+      const opts = await requisitionService.getPublicFilters();
       setFilters(opts);
     } catch (err) {
       console.error(err);

@@ -272,7 +272,7 @@ export default function ProfilePage() {
                     {/* Actions */}
                     <div className="shrink-0 flex items-center gap-2">
                       <a
-                        href={applicationService.getResumeDownloadUrl(app.id)}
+                        href={applicationService.getResumeUrl(app.id)}
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-2 rounded-xl transition-all"
@@ -359,7 +359,7 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <a
-                            href={applicationService.getResumeDownloadUrl(app.id)}
+                            href={applicationService.getResumeUrl(app.id)}
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all"

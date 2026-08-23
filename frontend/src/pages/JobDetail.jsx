@@ -18,7 +18,7 @@ export default function JobDetail() {
   useEffect(() => {
     const fetchJobDetail = async () => {
       try {
-        const data = await requisitionService.getPublicRequisitionDetail(id);
+        const data = await requisitionService.getPublicDetail(id);
         setJob(data);
       } catch (err) {
         setError('Job opening not found or no longer active.');
