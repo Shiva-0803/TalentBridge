@@ -193,13 +193,14 @@ def create_requisition(
 
     requisition = JobRequisition(
         requisition_id=req_code,
+        company_name=req_data.company_name or "TalentBridge",
         job_title=req_data.job_title,
         department=req_data.department,
         location=req_data.location,
         employment_type=req_data.employment_type,
         experience_range=req_data.experience_range,
         openings=req_data.openings,
-        hiring_manager=req_data.hiring_manager,
+        hiring_manager=req_data.hiring_manager or "HR Recruiting Team",
         max_salary_budget=req_data.max_salary_budget,
         hiring_target_date=req_data.hiring_target_date,
         job_description=req_data.job_description,
@@ -225,13 +226,14 @@ def update_requisition(
         raise HTTPException(status_code=404, detail="Requisition not found")
 
     old_status = req.status
+    req.company_name = req_data.company_name or "TalentBridge"
     req.job_title = req_data.job_title
     req.department = req_data.department
     req.location = req_data.location
     req.employment_type = req_data.employment_type
     req.experience_range = req_data.experience_range
     req.openings = req_data.openings
-    req.hiring_manager = req_data.hiring_manager
+    req.hiring_manager = req_data.hiring_manager or "HR Recruiting Team"
     req.max_salary_budget = req_data.max_salary_budget
     req.hiring_target_date = req_data.hiring_target_date
     req.job_description = req_data.job_description

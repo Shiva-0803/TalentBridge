@@ -81,6 +81,7 @@ class WorkExperienceRecordSchema(BaseModel):
 
 # Requisition Schemas
 class RequisitionBase(BaseModel):
+    company_name: Optional[str] = "TalentBridge"
     job_title: str = Field(..., max_length=100)
     department: str
     location: str

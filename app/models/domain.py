@@ -49,6 +49,7 @@ class JobRequisition(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     requisition_id = Column(String, unique=True, index=True, nullable=False) # e.g. REQ-2026-00417
+    company_name = Column(String, default="TalentBridge", nullable=True)
     job_title = Column(String(100), nullable=False)
     department = Column(String, nullable=False)
     location = Column(String, nullable=False)

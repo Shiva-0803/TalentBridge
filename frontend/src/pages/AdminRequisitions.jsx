@@ -48,6 +48,7 @@ export default function AdminRequisitions() {
   const handleOpenCreateModal = () => {
     setEditingId(null);
     setFormData({
+      company_name: 'TalentBridge',
       job_title: '',
       department: 'Engineering',
       location: 'Hyderabad',
@@ -67,13 +68,14 @@ export default function AdminRequisitions() {
   const handleOpenEditModal = (req) => {
     setEditingId(req.id);
     setFormData({
+      company_name: req.company_name || 'TalentBridge',
       job_title: req.job_title,
       department: req.department,
       location: req.location,
       employment_type: req.employment_type,
       experience_range: req.experience_range,
       openings: req.openings,
-      hiring_manager: req.hiring_manager,
+      hiring_manager: req.hiring_manager || 'HR Recruiting Team',
       max_salary_budget: req.max_salary_budget || '',
       hiring_target_date: req.hiring_target_date || '',
       job_description: req.job_description,
@@ -87,8 +89,26 @@ export default function AdminRequisitions() {
     setModalLoading(true);
     setModalError(null);
 
+    // Strict validation: Ensure Company Name, Job Title, Salary Budget, Department, Location, Experience, and Job Description are entered
+    if (
+      !formData.company_name?.trim() ||
+      !formData.job_title?.trim() ||
+      !formData.department?.trim() ||
+      !formData.location?.trim() ||
+      !formData.employment_type?.trim() ||
+      !formData.experience_range?.trim() ||
+      !formData.max_salary_budget?.trim() ||
+      !formData.job_description?.trim()
+    ) {
+      setModalError('⚠️ Please enter all required details (Company Name, Job Title/Role, Maximum Salary Budget, Department, Location, Employment Type, Experience Range, and Job Description) before submitting!');
+      setModalLoading(false);
+      return;
+    }
+
     const payload = {
       ...formData,
+      company_name: formData.company_name.trim(),
+      job_title: formData.job_title.trim(),
       hiring_manager: formData.hiring_manager?.trim() || 'HR Recruiting Team',
       status: statusOverride || formData.status
     };
@@ -319,12 +339,14 @@ export default function AdminRequisitions() {
               <div className="space-y-5">
                 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Company Name</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Company Name *</label>
                   <input
                     type="text"
-                    disabled
-                    value="TalentBridge"
-                    className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 cursor-not-allowed"
+                    required
+                    value={formData.company_name}
+                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                    placeholder="e.g. TalentBridge / Google / Infosys"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
                   />
                 </div>
 
