@@ -273,3 +273,50 @@ def get_me(current_user: User = Depends(get_current_user), db: Session = Depends
             "profile_photo_url": profile.profile_photo_url if profile else None,
         } if profile else None
     }
+
+class BasicProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    mobile: Optional[str] = None
+    gender: Optional[str] = None
+    dob: Optional[str] = None
+    current_location: Optional[str] = None
+    current_company: Optional[str] = None
+    notice_period: Optional[str] = None
+    current_address: Optional[str] = None
+
+@router.put("/me")
+@router.put("/profile")
+def update_my_profile(
+    data: BasicProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if data.first_name:
+        current_user.first_name = data.first_name.strip()
+    if data.last_name is not None:
+        current_user.last_name = data.last_name.strip()
+    db.commit()
+
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == current_user.id).first()
+    if not profile:
+        profile = CandidateProfile(user_id=current_user.id)
+        db.add(profile)
+
+    if data.mobile is not None:
+        profile.mobile = data.mobile.strip()
+    if data.gender is not None:
+        profile.gender = data.gender.strip()
+    if data.dob is not None:
+        profile.dob = data.dob.strip()
+    if data.current_location is not None:
+        profile.current_location = data.current_location.strip()
+    if data.current_company is not None:
+        profile.current_company = data.current_company.strip()
+    if data.notice_period is not None:
+        profile.notice_period = data.notice_period.strip()
+    if data.current_address is not None:
+        profile.current_address = data.current_address.strip()
+
+    db.commit()
+    return {"message": "Profile updated successfully"}

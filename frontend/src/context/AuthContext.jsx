@@ -169,6 +169,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        fetchUserData,
         fetchNotifications,
         authModalOpen,
         setAuthModalOpen,

@@ -7,7 +7,7 @@ import {
   RefreshCw, Download, Sparkles, ArrowRight, Shield,
   Upload, X, AlertCircle, CheckCircle2, Pencil
 } from 'lucide-react';
-import { applicationService } from '../services/api';
+import { applicationService, authService } from '../services/api';
 
 const statusBadge = (status) => {
   const map = {
@@ -110,35 +110,70 @@ function UpdateCVButton({ app, onSuccess }) {
 
 // ─── Main Profile Page ─────────────────────────────────────────
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, fetchUserData } = useAuth();
   const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('applications');
   const [expandedCV, setExpandedCV] = useState(null); // app.id that has update panel open
 
-  useEffect(() => {
-    if (!user) { navigate('/'); return; }
-    fetchApplications();
-  }, [user]);
+  // Edit Basic Details State
+  const [isEditingBasic, setIsEditingBasic] = useState(false);
+  const [savingBasic, setSavingBasic] = useState(false);
+  const [basicError, setBasicError] = useState(null);
+  const [basicSuccess, setBasicSuccess] = useState(null);
 
-  const fetchApplications = async () => {
-    setLoading(true);
-    try {
-      const data = await applicationService.getMyApplications();
-      setApplications(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const profile = user?.profile || {};
+  const fullName = `${user?.first_name || ''} ${user?.last_name || ''}`;
+  const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase();
+
+  const [basicForm, setBasicForm] = useState({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    mobile: profile.mobile || '',
+    gender: profile.gender || '',
+    dob: profile.dob || '',
+    current_location: profile.current_location || '',
+    current_company: profile.current_company || '',
+    notice_period: profile.notice_period || '',
+  });
+
+  const handleOpenEditBasic = () => {
+    setBasicForm({
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      mobile: profile.mobile || '',
+      gender: profile.gender || '',
+      dob: profile.dob || '',
+      current_location: profile.current_location || '',
+      current_company: profile.current_company || '',
+      notice_period: profile.notice_period || '',
+    });
+    setBasicError(null);
+    setBasicSuccess(null);
+    setIsEditingBasic(true);
   };
 
-  if (!user) return null;
+  const handleSaveBasicDetails = async (e) => {
+    e.preventDefault();
+    setSavingBasic(true);
+    setBasicError(null);
+    setBasicSuccess(null);
 
-  const profile = user.profile || {};
-  const fullName = `${user.first_name} ${user.last_name}`;
-  const initials = `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase();
+    try {
+      await authService.updateProfile(basicForm);
+      setBasicSuccess('Basic details updated successfully!');
+      if (fetchUserData) await fetchUserData();
+      setTimeout(() => {
+        setIsEditingBasic(false);
+        setBasicSuccess(null);
+      }, 1200);
+    } catch (err) {
+      setBasicError(err.response?.data?.detail || 'Failed to update basic details.');
+    } finally {
+      setSavingBasic(false);
+    }
+  };
 
   const stats = [
     { label: 'Total Applied', value: applications.length, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -302,28 +337,166 @@ export default function ProfilePage() {
                 <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
                   <User className="w-4 h-4 text-blue-600" /> Personal Information
                 </h3>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Auto-filled from last application</span>
+                <button
+                  type="button"
+                  onClick={handleOpenEditBasic}
+                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-extrabold text-xs rounded-xl border border-blue-200 transition-all flex items-center gap-1.5"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Edit Basic Details
+                </button>
               </div>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {[
-                  { icon: <User className="w-4 h-4 text-blue-500" />, label: 'Full Name', value: fullName },
-                  { icon: <Mail className="w-4 h-4 text-indigo-500" />, label: 'Email Address', value: user.email },
-                  { icon: <Phone className="w-4 h-4 text-emerald-500" />, label: 'Mobile Number', value: profile.mobile || '—' },
-                  { icon: <Award className="w-4 h-4 text-amber-500" />, label: 'Gender', value: profile.gender || '—' },
-                  { icon: <Calendar className="w-4 h-4 text-purple-500" />, label: 'Date of Birth', value: profile.dob || '—' },
-                  { icon: <MapPin className="w-4 h-4 text-red-500" />, label: 'Current Location', value: profile.current_location || '—' },
-                  { icon: <Briefcase className="w-4 h-4 text-slate-500" />, label: 'Current Company', value: profile.current_company || '—' },
-                  { icon: <Clock className="w-4 h-4 text-orange-500" />, label: 'Notice Period', value: profile.notice_period || '—' },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">{item.icon}</div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{item.label}</p>
-                      <p className="text-sm font-semibold text-slate-900 mt-0.5 truncate">{item.value}</p>
+
+              {/* EDIT BASIC DETAILS FORM */}
+              {isEditingBasic ? (
+                <form onSubmit={handleSaveBasicDetails} className="p-6 space-y-4">
+                  {basicError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <span>{basicError}</span>
+                    </div>
+                  )}
+
+                  {basicSuccess && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{basicSuccess}</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">First Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={basicForm.first_name}
+                        onChange={(e) => setBasicForm({ ...basicForm, first_name: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Last Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={basicForm.last_name}
+                        onChange={(e) => setBasicForm({ ...basicForm, last_name: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Mobile Number *</label>
+                      <input
+                        type="text"
+                        required
+                        value={basicForm.mobile}
+                        onChange={(e) => setBasicForm({ ...basicForm, mobile: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Gender *</label>
+                      <select
+                        required
+                        value={basicForm.gender}
+                        onChange={(e) => setBasicForm({ ...basicForm, gender: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Date of Birth *</label>
+                      <input
+                        type="date"
+                        required
+                        value={basicForm.dob}
+                        onChange={(e) => setBasicForm({ ...basicForm, dob: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Current Location *</label>
+                      <input
+                        type="text"
+                        required
+                        value={basicForm.current_location}
+                        onChange={(e) => setBasicForm({ ...basicForm, current_location: e.target.value })}
+                        placeholder="City, State"
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Current Company</label>
+                      <input
+                        type="text"
+                        value={basicForm.current_company}
+                        onChange={(e) => setBasicForm({ ...basicForm, current_company: e.target.value })}
+                        placeholder="N/A if Fresher"
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Notice Period *</label>
+                      <select
+                        required
+                        value={basicForm.notice_period}
+                        onChange={(e) => setBasicForm({ ...basicForm, notice_period: e.target.value })}
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="">Select Notice Period</option>
+                        <option value="Immediate">Immediate</option>
+                        <option value="15 days">15 days</option>
+                        <option value="30 days">30 days</option>
+                        <option value="60 days">60 days</option>
+                        <option value="90+ days">90+ days</option>
+                      </select>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingBasic(false)}
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingBasic}
+                      className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {savingBasic ? 'Saving...' : 'Save Basic Details'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {[
+                    { icon: <User className="w-4 h-4 text-blue-500" />, label: 'Full Name', value: fullName },
+                    { icon: <Mail className="w-4 h-4 text-indigo-500" />, label: 'Email Address', value: user.email },
+                    { icon: <Phone className="w-4 h-4 text-emerald-500" />, label: 'Mobile Number', value: profile.mobile || '—' },
+                    { icon: <Award className="w-4 h-4 text-amber-500" />, label: 'Gender', value: profile.gender || '—' },
+                    { icon: <Calendar className="w-4 h-4 text-purple-500" />, label: 'Date of Birth', value: profile.dob || '—' },
+                    { icon: <MapPin className="w-4 h-4 text-red-500" />, label: 'Current Location', value: profile.current_location || '—' },
+                    { icon: <Briefcase className="w-4 h-4 text-slate-500" />, label: 'Current Company', value: profile.current_company || '—' },
+                    { icon: <Clock className="w-4 h-4 text-orange-500" />, label: 'Notice Period', value: profile.notice_period || '—' },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">{item.icon}</div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{item.label}</p>
+                        <p className="text-sm font-semibold text-slate-900 mt-0.5 truncate">{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Resume / CV Settings */}
@@ -402,8 +575,8 @@ export default function ProfilePage() {
               <div className="p-6 flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
                 <div>
-                  <p className="text-xs font-bold text-slate-900">Passwordless Authentication</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Your account uses secure real-time email OTP login — no password required.</p>
+                  <p className="text-xs font-bold text-slate-900">Password Protected Account</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Your account is secured with email username and encrypted password credentials.</p>
                 </div>
               </div>
             </div>
