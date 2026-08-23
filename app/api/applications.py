@@ -29,7 +29,7 @@ def generate_app_code(db: Session) -> str:
 
 @router.post("")
 async def submit_application(
-    requisition_id: int = Form(...),
+    requisition_id: str = Form(...),
     bio_data: str = Form(...), # JSON string containing bio-data
     education: str = Form(...), # JSON string array of education records
     work_experience: str = Form(...), # JSON string array of work exp records
@@ -44,13 +44,27 @@ async def submit_application(
     Submits a candidate application with Bio-Data, Education, Work Experience, and Mandatory Resume Upload.
     """
     # 1. Validate Requisition
-    req = db.query(JobRequisition).filter(JobRequisition.id == requisition_id, JobRequisition.status == "Published").first()
+    req = None
+    req_id_str = str(requisition_id).strip()
+    if req_id_str.isdigit():
+        req = db.query(JobRequisition).filter(JobRequisition.id == int(req_id_str)).first()
+
     if not req:
+        clean_req_id = req_id_str.replace(" ", "-")
+        req = db.query(JobRequisition).filter(
+            or_(
+                JobRequisition.requisition_id == req_id_str,
+                JobRequisition.requisition_id == clean_req_id,
+                JobRequisition.requisition_id.ilike(f"%{clean_req_id}%")
+            )
+        ).first()
+
+    if not req or req.status != "Published":
         raise HTTPException(status_code=400, detail="Target job requisition is no longer active or published.")
 
     # 2. Check Duplicate Application
     existing_app = db.query(Application).filter(
-        Application.requisition_id == requisition_id,
+        Application.requisition_id == req.id,
         Application.candidate_id == current_user.id
     ).first()
     if existing_app:
@@ -239,7 +253,7 @@ def get_my_applications(
 
 @router.get("/admin/grid")
 def get_admin_applications_grid(
-    requisition_id: Optional[int] = Query(None, description="Optional requisition ID filter"),
+    requisition_id: Optional[str] = Query(None, description="Optional requisition ID filter"),
     search: Optional[str] = Query(None, description="Search candidate name or email"),
     status_filter: Optional[str] = Query(None, description="Filter by status: New, Reviewed, Shortlisted, Rejected"),
     current_admin: User = Depends(get_current_admin),
@@ -251,7 +265,15 @@ def get_admin_applications_grid(
     query = db.query(Application)
 
     if requisition_id:
-        query = query.filter(Application.requisition_id == requisition_id)
+        req_target = None
+        req_str = str(requisition_id).strip()
+        if req_str.isdigit():
+            req_target = db.query(JobRequisition).filter(JobRequisition.id == int(req_str)).first()
+        if not req_target:
+            req_target = db.query(JobRequisition).filter(JobRequisition.requisition_id == req_str).first()
+        
+        if req_target:
+            query = query.filter(Application.requisition_id == req_target.id)
 
     if status_filter and status_filter != "All":
         query = query.filter(Application.status == status_filter)
