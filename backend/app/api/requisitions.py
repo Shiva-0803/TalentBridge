@@ -54,10 +54,14 @@ def list_public_requisitions(
 
     requisitions = query.order_by(JobRequisition.posted_at.desc(), JobRequisition.id.desc()).all()
     
+    # Batch query application counts to eliminate N+1 latency
+    counts_raw = db.query(Application.requisition_id, func.count(Application.id)).group_by(Application.requisition_id).all()
+    app_counts = {r_id: count for r_id, count in counts_raw}
+
     # Return formatted list
     result = []
     for req in requisitions:
-        app_count = db.query(Application).filter(Application.requisition_id == req.id).count()
+        app_count = app_counts.get(req.id, 0)
         result.append({
             "id": req.id,
             "requisition_id": req.requisition_id,
@@ -79,35 +83,32 @@ def list_public_requisitions(
     return result
 
 @router.get("/public/filters")
-def get_public_filter_options(db: Session = Depends(get_db)):
+def get_public_filters(db: Session = Depends(get_db)):
     """
-    Returns unique departments, locations, and experience options for filtering.
+    Returns unique active departments, locations, and experience ranges for public filtering.
     """
-    published = db.query(JobRequisition).filter(JobRequisition.status == "Published").all()
-    departments = sorted(list(set(req.department for req in published if req.department)))
-    locations = sorted(list(set(req.location for req in published if req.location)))
-    experiences = sorted(list(set(req.experience_range for req in published if req.experience_range)))
+    active_reqs = db.query(JobRequisition).filter(JobRequisition.status == "Published").all()
+    departments = sorted(list(set(r.department for r in active_reqs if r.department)))
+    locations = sorted(list(set(r.location for r in active_reqs if r.location)))
+    experiences = sorted(list(set(r.experience_range for r in active_reqs if r.experience_range)))
+    
     return {
-        "departments": ["All"] + departments,
-        "locations": ["All"] + locations,
-        "experiences": ["All"] + experiences
+        "departments": departments,
+        "locations": locations,
+        "experiences": experiences
     }
 
-@router.get("/public/{req_id}")
-def get_public_requisition(req_id: str, db: Session = Depends(get_db)):
+@router.get("/public/{id}")
+def get_public_requisition_detail(id: int, db: Session = Depends(get_db)):
     """
-    Public job detail page by requisition string (e.g. REQ-2026-00417) or numeric ID.
+    Public detailed view of a single published job requisition.
     """
-    if req_id.isdigit():
-        req = db.query(JobRequisition).filter(JobRequisition.id == int(req_id)).first()
-    else:
-        req = db.query(JobRequisition).filter(JobRequisition.requisition_id == req_id).first()
-
-    if not req or req.status != "Published":
-        raise HTTPException(status_code=404, detail="Job requisition not found or unavailable")
-
+    req = db.query(JobRequisition).filter(JobRequisition.id == id, JobRequisition.status == "Published").first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Job opening not found or is no longer accepting applications.")
+    
     app_count = db.query(Application).filter(Application.requisition_id == req.id).count()
-
+    
     return {
         "id": req.id,
         "requisition_id": req.requisition_id,
@@ -127,9 +128,9 @@ def get_public_requisition(req_id: str, db: Session = Depends(get_db)):
         "application_count": app_count
     }
 
-# Admin Endpoints (Requires Admin Authentication)
+# Admin Endpoints (Restricted to System Admin)
 
-@router.get("/admin/all")
+@router.get("/admin")
 def list_admin_requisitions(
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
@@ -138,9 +139,14 @@ def list_admin_requisitions(
     List all requisitions across all statuses (Draft, Published, Closed) with application counts for Admin console.
     """
     requisitions = db.query(JobRequisition).order_by(JobRequisition.id.desc()).all()
+    
+    # Batch query application counts to eliminate N+1 latency
+    counts_raw = db.query(Application.requisition_id, func.count(Application.id)).group_by(Application.requisition_id).all()
+    app_counts = {r_id: count for r_id, count in counts_raw}
+
     result = []
     for req in requisitions:
-        app_count = db.query(Application).filter(Application.requisition_id == req.id).count()
+        app_count = app_counts.get(req.id, 0)
         result.append({
             "id": req.id,
             "requisition_id": req.requisition_id,

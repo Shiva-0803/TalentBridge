@@ -66,8 +66,8 @@ export default function CandidateApplication() {
   // Step 4: Resume & Attachments
   const [resumeFile, setResumeFile] = useState(null);
   const [coverNote, setCoverNote] = useState('');
-  const [dataAccuracyConsent, setDataAccuracyConsent] = useState(false);
-  const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [dataAccuracyConsent, setDataAccuracyConsent] = useState(true);
+  const [privacyConsent, setPrivacyConsent] = useState(true);
 
   useEffect(() => {
     const fetchJob = async () => {

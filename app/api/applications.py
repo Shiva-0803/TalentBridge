@@ -257,12 +257,28 @@ def get_admin_applications_grid(
         query = query.filter(Application.status == status_filter)
 
     apps = query.order_by(Application.submitted_at.desc()).all()
+    if not apps:
+        return []
+
+    # Batch load all related records in bulk (eliminates N+1 queries)
+    cand_ids = list(set(a.candidate_id for a in apps if a.candidate_id))
+    req_ids = list(set(a.requisition_id for a in apps if a.requisition_id))
+    app_ids = [a.id for a in apps]
+
+    users_map = {u.id: u for u in db.query(User).filter(User.id.in_(cand_ids)).all()} if cand_ids else {}
+    profiles_map = {p.user_id: p for p in db.query(CandidateProfile).filter(CandidateProfile.user_id.in_(cand_ids)).all()} if cand_ids else {}
+    reqs_map = {r.id: r for r in db.query(JobRequisition).filter(JobRequisition.id.in_(req_ids)).all()} if req_ids else {}
+    
+    work_exps_raw = db.query(WorkExperienceRecord).filter(WorkExperienceRecord.application_id.in_(app_ids)).all() if app_ids else []
+    work_exps_map = {}
+    for w in work_exps_raw:
+        work_exps_map.setdefault(w.application_id, []).append(w)
 
     grid_items = []
     for app in apps:
-        candidate = db.query(User).filter(User.id == app.candidate_id).first()
-        profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == app.candidate_id).first()
-        req = db.query(JobRequisition).filter(JobRequisition.id == app.requisition_id).first()
+        candidate = users_map.get(app.candidate_id)
+        profile = profiles_map.get(app.candidate_id)
+        req = reqs_map.get(app.requisition_id)
 
         cand_name = f"{candidate.first_name} {candidate.last_name}" if candidate else "Unknown Candidate"
         cand_email = candidate.email if candidate else ""
@@ -274,7 +290,7 @@ def get_admin_applications_grid(
                 continue
 
         # Calculate Total Experience
-        work_exps = db.query(WorkExperienceRecord).filter(WorkExperienceRecord.application_id == app.id).all()
+        work_exps = work_exps_map.get(app.id, [])
         total_years = sum(w.years_calculated for w in work_exps) if work_exps else 0.0
         exp_str = "Fresher" if not work_exps or all(w.is_fresher for w in work_exps) else f"{round(total_years, 1)} yrs"
 

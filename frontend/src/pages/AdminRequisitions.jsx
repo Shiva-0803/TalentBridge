@@ -17,7 +17,7 @@ export default function AdminRequisitions() {
 
   const [formData, setFormData] = useState({
     job_title: '',
-    department: '',
+    department: 'Engineering',
     location: '',
     employment_type: 'Full-time',
     experience_range: '',
@@ -49,7 +49,7 @@ export default function AdminRequisitions() {
     setEditingId(null);
     setFormData({
       job_title: '',
-      department: '',
+      department: 'Engineering',
       location: '',
       employment_type: 'Full-time',
       experience_range: '',
