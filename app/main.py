@@ -28,11 +28,11 @@ def auto_seed_db():
     try:
         db = SessionLocal()
         # Seed Admin if not exists
-        admin = db.query(User).filter(User.role == "admin").first()
+        admin = db.query(User).filter(User.email == "admin@talentbridge.com").first()
         if not admin:
             admin = User(
                 email="admin@talentbridge.com",
-                password_hash=get_password_hash("Admin@123"),
+                password_hash=get_password_hash("admin123"),
                 first_name="Admin",
                 last_name="",
                 role="admin"
@@ -40,6 +40,41 @@ def auto_seed_db():
             db.add(admin)
             db.commit()
             print("[AUTO SEED] Admin account verified.")
+        else:
+            admin.password_hash = get_password_hash("admin123")
+            db.commit()
+
+        # Seed Test Candidate if not exists
+        candidate = db.query(User).filter(User.email == "candidate@talentbridge.com").first()
+        if not candidate:
+            candidate = User(
+                email="candidate@talentbridge.com",
+                password_hash=get_password_hash("candidate123"),
+                first_name="Test",
+                last_name="Candidate",
+                role="candidate"
+            )
+            db.add(candidate)
+            db.commit()
+            db.refresh(candidate)
+
+            profile = CandidateProfile(
+                user_id=candidate.id,
+                mobile="+91 98765 43210",
+                gender="Male",
+                dob="1998-05-15",
+                current_location="Bangalore, Karnataka",
+                current_company="TalentBridge Labs",
+                notice_period="Immediate",
+                current_address="MG Road, Bangalore, Karnataka 560001"
+            )
+            db.add(profile)
+            db.commit()
+            print("[AUTO SEED] Test candidate account verified.")
+        else:
+            candidate.password_hash = get_password_hash("candidate123")
+            db.commit()
+
         db.close()
     except Exception as e:
         print(f"[AUTO SEED ERROR] {e}")
