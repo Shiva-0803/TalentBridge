@@ -128,15 +128,43 @@ export default function ProfilePage() {
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase();
 
   const [basicForm, setBasicForm] = useState({
-    first_name: user?.first_name || '',
-    last_name: user?.last_name || '',
-    mobile: profile.mobile || '',
-    gender: profile.gender || '',
-    dob: profile.dob || '',
-    current_location: profile.current_location || '',
-    current_company: profile.current_company || '',
-    notice_period: profile.notice_period || '',
+    first_name: '',
+    last_name: '',
+    mobile: '',
+    gender: '',
+    dob: '',
+    current_location: '',
+    current_company: '',
+    notice_period: '',
   });
+
+  useEffect(() => {
+    if (user) {
+      setBasicForm({
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        mobile: user.profile?.mobile || '',
+        gender: user.profile?.gender || '',
+        dob: user.profile?.dob || '',
+        current_location: user.profile?.current_location || '',
+        current_company: user.profile?.current_company || '',
+        notice_period: user.profile?.notice_period || '',
+      });
+      fetchApplications();
+    }
+  }, [user]);
+
+  const fetchApplications = async () => {
+    setLoading(true);
+    try {
+      const data = await applicationService.getMyApplications();
+      setApplications(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenEditBasic = () => {
     setBasicForm({

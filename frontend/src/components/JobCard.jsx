@@ -103,13 +103,15 @@ export default function JobCard({ job, onShare }) {
             <Eye className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-600" /> View
           </Link>
 
-          {/* Apply Now Button */}
-          <button
-            onClick={handleApplyClick}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center gap-1.5"
-          >
-            Apply Now <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          {/* Apply Now Button - Hidden for admin users */}
+          {user?.role !== 'admin' && (
+            <button
+              onClick={handleApplyClick}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center gap-1.5"
+            >
+              Apply Now <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          )}
 
           {/* Share Button */}
           <button

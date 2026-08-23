@@ -114,12 +114,14 @@ export default function JobDetail() {
 
             {/* Header Action CTA */}
             <div className="flex items-center gap-3">
-              <button
-                onClick={handleApplyClick}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-2"
-              >
-                Apply Now
-              </button>
+              {user?.role !== 'admin' && (
+                <button
+                  onClick={handleApplyClick}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-2"
+                >
+                  Apply Now
+                </button>
+              )}
               <button
                 onClick={() => setIsShareOpen(true)}
                 className="px-4 py-3 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-sm rounded-xl border border-slate-300 shadow-xs transition-colors flex items-center gap-2"
@@ -228,18 +230,20 @@ export default function JobDetail() {
               </div>
 
               {/* Call to action box */}
-              <div className="pt-4 border-t border-slate-100 bg-blue-50/70 -mx-6 -mb-6 p-6 rounded-b-2xl">
-                <h4 className="font-bold text-slate-900 text-xs mb-1">Ready to apply?</h4>
-                <p className="text-[11px] text-slate-600 mb-4">
-                  Sign in or create a candidate account to complete the guided application form.
-                </p>
-                <button
-                  onClick={handleApplyClick}
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
-                >
-                  Apply Now
-                </button>
-              </div>
+              {user?.role !== 'admin' && (
+                <div className="pt-4 border-t border-slate-100 bg-blue-50/70 -mx-6 -mb-6 p-6 rounded-b-2xl">
+                  <h4 className="font-bold text-slate-900 text-xs mb-1">Ready to apply?</h4>
+                  <p className="text-[11px] text-slate-600 mb-4">
+                    Sign in or create a candidate account to complete the guided application form.
+                  </p>
+                  <button
+                    onClick={handleApplyClick}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+                  >
+                    Apply Now
+                  </button>
+                </div>
+              )}
 
             </div>
           </div>
