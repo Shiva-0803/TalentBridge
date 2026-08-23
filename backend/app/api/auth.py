@@ -76,18 +76,19 @@ async def send_otp(request: SendOTPRequest, db: Session = Depends(get_db)):
     is_existing = user is not None
 
     # Send email and check delivery status
-    success, msg, dev_otp = send_otp_email(email, otp_code)
+    success, msg = send_otp_email(email, otp_code)
+    if not success:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{msg}. Please check your email address or try again."
+        )
 
-    res = {
+    return {
         "success": True,
         "message": f"Verification code sent to {email}",
         "email": email,
         "is_existing": is_existing
     }
-    if dev_otp:
-        res["dev_otp"] = dev_otp
-
-    return res
 
 @router.post("/verify-otp", response_model=Token)
 def verify_otp(request: VerifyOTPRequest, db: Session = Depends(get_db)):

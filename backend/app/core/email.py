@@ -48,7 +48,7 @@ TalentBridge HR Team
                 server.send_message(msg)
                 server.quit()
                 print(f"[SMTP TLS SUCCESS] OTP email sent to {to_email}")
-                return True, "Email sent", None
+                return True, "Email sent"
             except Exception as tls_err:
                 print(f"[SMTP TLS WARN] Port 587 failed ({tls_err}). Trying Port 465 SSL fallback...")
                 server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10)
@@ -56,15 +56,14 @@ TalentBridge HR Team
                 server.send_message(msg)
                 server.quit()
                 print(f"[SMTP SSL SUCCESS] OTP email sent to {to_email}")
-                return True, "Email sent via SSL", None
+                return True, "Email sent via SSL"
         except Exception as e:
             err_str = str(e)
             print(f"[SMTP ERROR] {err_str}")
-            # If cloud host network blocks raw SMTP sockets ([Errno 101]), return dev_otp fallback
-            return True, f"SMTP Network Notice: {err_str}", otp_code
+            return False, f"Email delivery error: {err_str}"
     else:
         print(f"[LOG ONLY] OTP for {to_email}: {otp_code}")
-        return True, "Logged", otp_code
+        return True, "Logged"
 
 
 def send_application_confirmation_email(
