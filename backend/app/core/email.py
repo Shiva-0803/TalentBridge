@@ -73,9 +73,13 @@ def send_via_http_api(to_email: str, subject: str, body_text: str):
                 err_body = e.read().decode('utf-8')
             except Exception:
                 err_body = str(e)
-            print(f"[HTTP API ERROR] Resend returned HTTP {e.code}: {err_body}")
+            err_msg = f"Resend HTTP {e.code}: {err_body}"
+            print(f"[HTTP API ERROR] {err_msg}")
+            return False, err_msg
         except Exception as e:
-            print(f"[HTTP API WARN] Resend connection error: {e}")
+            err_msg = f"Resend connection error: {e}"
+            print(f"[HTTP API WARN] {err_msg}")
+            return False, err_msg
 
     # 2. Brevo (Sendinblue) API (key starts with 'xkeysib-' or variable name contains BREVO)
     if api_key.startswith("xkeysib-") or "BREVO" in key_name.upper():
