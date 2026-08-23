@@ -1,7 +1,7 @@
 import random
 import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -322,3 +322,72 @@ def update_my_profile(
 
     db.commit()
     return {"message": "Profile updated successfully"}
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+    new_password: str
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    email = request.email.lower().strip()
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="No registered account found with this email address."
+        )
+
+    otp_code = f"{random.randint(100000, 999999)}"
+    expires_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+
+    db.query(OTPRecord).filter(OTPRecord.email == email, OTPRecord.is_verified == False).delete()
+    otp_entry = OTPRecord(
+        email=email,
+        otp_code=otp_code,
+        expires_at=expires_at,
+        is_verified=False
+    )
+    db.add(otp_entry)
+    db.commit()
+
+    send_otp_email(email, otp_code)
+    return {
+        "success": True,
+        "message": f"Password reset verification code sent to {email}",
+        "otp_hint": otp_code
+    }
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    email = request.email.lower().strip()
+    otp_code = request.otp_code.strip()
+    new_password = request.new_password.strip()
+
+    if not new_password or len(new_password) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters long.")
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User account not found.")
+
+    otp_record = db.query(OTPRecord).filter(
+        OTPRecord.email == email,
+        OTPRecord.otp_code == otp_code,
+        OTPRecord.is_verified == False
+    ).order_by(OTPRecord.id.desc()).first()
+
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="Invalid reset code. Please check and try again.")
+
+    if datetime.datetime.utcnow() > otp_record.expires_at:
+        raise HTTPException(status_code=400, detail="Reset code has expired. Please request a new one.")
+
+    otp_record.is_verified = True
+    user.password_hash = get_password_hash(new_password)
+    db.commit()
+
+    return {"success": True, "message": "Password updated successfully! You can now sign in with your new password."}
