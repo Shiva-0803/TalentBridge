@@ -185,18 +185,24 @@ def admin_login(request: AdminLoginRequest, db: Session = Depends(get_db)):
 # LEGACY & CURRENT USER ROUTES
 # -------------------------------------------------------------
 
+# -------------------------------------------------------------
+# CANDIDATE & USER AUTHENTICATION (EMAIL + PASSWORD)
+# -------------------------------------------------------------
+
 @router.post("/register", response_model=Token)
+@router.post("/candidate/register", response_model=Token)
 def register(user_data: UserRegister, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    email_clean = user_data.email.lower().strip()
+    existing_user = db.query(User).filter(User.email == email_clean).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email is already registered. Please login.")
+        raise HTTPException(status_code=400, detail="An account with this email address already exists. Please log in.")
 
     hashed_pw = get_password_hash(user_data.password)
     user = User(
-        email=user_data.email,
+        email=email_clean,
         password_hash=hashed_pw,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
+        first_name=user_data.first_name.strip(),
+        last_name=user_data.last_name.strip() if user_data.last_name else "",
         role=user_data.role or "candidate"
     )
     db.add(user)
@@ -206,7 +212,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     if user.role == "candidate":
         profile = CandidateProfile(
             user_id=user.id,
-            mobile=user_data.mobile
+            mobile=user_data.mobile.strip() if user_data.mobile else None
         )
         db.add(profile)
         db.commit()
@@ -226,10 +232,12 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     }
 
 @router.post("/login", response_model=Token)
+@router.post("/candidate/login", response_model=Token)
 def login(user_data: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_data.email).first()
+    email_clean = user_data.email.lower().strip()
+    user = db.query(User).filter(User.email == email_clean).first()
     if not user or not verify_password(user_data.password, user.password_hash):
-        raise HTTPException(status_code=400, detail="Invalid email or password")
+        raise HTTPException(status_code=400, detail="Invalid email address or password. Please try again.")
 
     token = create_access_token(data={"sub": str(user.id), "email": user.email, "role": user.role})
     

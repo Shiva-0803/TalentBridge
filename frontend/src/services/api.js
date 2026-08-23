@@ -35,15 +35,12 @@ api.interceptors.request.use(
 
 // Auth Service
 export const authService = {
-  sendOtp: async (email) => {
-    const response = await api.post('/auth/send-otp', { email });
+  login: async (email, password) => {
+    const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
-  verifyOtp: async (email, otp_code, first_name = '', mobile = '') => {
-    const payload = { email, otp_code };
-    if (first_name) payload.first_name = first_name;
-    if (mobile) payload.mobile = mobile;
-    const response = await api.post('/auth/verify-otp', payload);
+  register: async (userData) => {
+    const response = await api.post('/auth/register', userData);
     return response.data;
   },
   adminLogin: async (email, password) => {
