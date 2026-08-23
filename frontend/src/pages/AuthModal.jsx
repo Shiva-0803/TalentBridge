@@ -102,7 +102,14 @@ export default function AuthModal() {
         navigate(`/apply/${pendingApplyReqId}`);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. An account with this email may already exist.');
+      const errMsg = err.response?.data?.detail || 'Registration failed.';
+      if (errMsg.toLowerCase().includes('already exists') || errMsg.toLowerCase().includes('already registered')) {
+        setCandidateMode('login');
+        setSuccessMsg(`Welcome back! Account found for ${email}. Please enter your password to sign in.`);
+        setError(null);
+      } else {
+        setError(errMsg);
+      }
     } finally {
       setLoading(false);
     }

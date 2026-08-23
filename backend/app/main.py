@@ -40,11 +40,6 @@ def auto_seed_db():
             db.add(admin)
             db.commit()
             print("[AUTO SEED] Admin account verified.")
-
-        # Clear sample job requisitions per user request
-        deleted_count = db.query(JobRequisition).delete()
-        db.commit()
-        print(f"[CLEANUP] Cleared {deleted_count} job requisition(s). Browse jobs is now clean.")
         db.close()
     except Exception as e:
         print(f"[AUTO SEED ERROR] {e}")
