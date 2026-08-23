@@ -87,7 +87,7 @@ class RequisitionBase(BaseModel):
     employment_type: str
     experience_range: str
     openings: int = 1
-    hiring_manager: str
+    hiring_manager: Optional[str] = "Recruitment Team"
     max_salary_budget: Optional[str] = None
     hiring_target_date: Optional[str] = None
     job_description: str

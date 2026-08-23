@@ -89,6 +89,7 @@ export default function AdminRequisitions() {
 
     const payload = {
       ...formData,
+      hiring_manager: formData.hiring_manager?.trim() || 'HR Recruiting Team',
       status: statusOverride || formData.status
     };
 
@@ -101,7 +102,14 @@ export default function AdminRequisitions() {
       setShowModal(false);
       fetchRequisitions();
     } catch (err) {
-      setModalError(err.response?.data?.detail || 'Failed to save requisition.');
+      const detail = err.response?.data?.detail;
+      if (typeof detail === 'string') {
+        setModalError(detail);
+      } else if (Array.isArray(detail)) {
+        setModalError(detail.map(d => `${d.loc?.[d.loc?.length - 1] || 'Field'}: ${d.msg}`).join(', '));
+      } else {
+        setModalError('Failed to save requisition. Please check form fields.');
+      }
     } finally {
       setModalLoading(false);
     }
