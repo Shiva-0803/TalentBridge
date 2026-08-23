@@ -395,3 +395,27 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
     db.commit()
 
     return {"success": True, "message": "Password updated successfully! You can now sign in with your new password."}
+
+import os as _os
+
+@router.get("/test-email")
+def test_email_delivery():
+    """Debug endpoint: tests email delivery and returns the exact result/error."""
+    from app.core.email import send_via_http_api, SMTP_USERNAME, SMTP_PASSWORD, get_http_api_key
+    key_name, api_key = get_http_api_key()
+    env_vars = {
+        "RESEND_API_KEY": bool(_os.getenv("RESEND_API_KEY")),
+        "BREVO_API_KEY": bool(_os.getenv("BREVO_API_KEY")),
+        "SMTP_USERNAME": SMTP_USERNAME,
+        "key_detected": key_name,
+        "key_prefix": api_key[:8] + "..." if api_key else None
+    }
+    success, msg = send_via_http_api(
+        to_email=SMTP_USERNAME or "test@example.com",
+        subject="TalentBridge Email Test",
+        body_text="This is a test email from TalentBridge to verify email delivery is working correctly."
+    )
+    return {
+        "env": env_vars,
+        "email_result": {"success": success, "message": msg}
+    }

@@ -12,6 +12,7 @@ except ImportError:
 
 import json
 import urllib.request
+import urllib.error
 
 SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
@@ -67,8 +68,14 @@ def send_via_http_api(to_email: str, subject: str, body_text: str):
                 if res.status in [200, 201, 202]:
                     print(f"[HTTP API SUCCESS] Resend email delivered to {to_email}")
                     return True, "Email sent via Resend HTTPS API"
+        except urllib.error.HTTPError as e:
+            try:
+                err_body = e.read().decode('utf-8')
+            except Exception:
+                err_body = str(e)
+            print(f"[HTTP API ERROR] Resend returned HTTP {e.code}: {err_body}")
         except Exception as e:
-            print(f"[HTTP API WARN] Resend API error: {e}")
+            print(f"[HTTP API WARN] Resend connection error: {e}")
 
     # 2. Brevo (Sendinblue) API (key starts with 'xkeysib-' or variable name contains BREVO)
     if api_key.startswith("xkeysib-") or "BREVO" in key_name.upper():
