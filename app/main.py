@@ -154,22 +154,16 @@ app.add_middleware(
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
-# Include API Routers with /api prefix AND root / prefix for universal router matching
+# Include API Routers with /api prefix
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(requisitions.router, prefix=settings.API_V1_STR)
 app.include_router(applications.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.ws_router, prefix=settings.API_V1_STR)
 
-app.include_router(auth.router)
-app.include_router(requisitions.router)
-app.include_router(applications.router)
-app.include_router(notifications.router)
-app.include_router(notifications.ws_router)
-
 # Mount Built React Frontend Dist Bundle for Full-Stack Cloud Serving
 from fastapi.responses import FileResponse
-from fastapi import HTTPException
+from fastapi.routing import APIRouter as _SpaRouter
 
 dist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dist")
 if os.path.exists(dist_dir):
@@ -177,22 +171,33 @@ if os.path.exists(dist_dir):
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-    @app.get("/{full_path:path}")
+    # SPA fallback: use a separate router added LAST so it never overrides API POST routes
+    _spa_router = _SpaRouter()
+
+    @_spa_router.get("/{full_path:path}", include_in_schema=False)
     def serve_frontend_spa(full_path: str):
-        if full_path.startswith("api") or full_path.startswith("uploads") or full_path.startswith("docs") or full_path == "openapi.json":
-            raise HTTPException(status_code=404, detail="API route not found")
-        
+        # Never intercept API, docs, or uploads paths
+        if (full_path.startswith("api/") or full_path == "api"
+                or full_path.startswith("uploads")
+                or full_path.startswith("docs")
+                or full_path == "openapi.json"
+                or full_path.startswith("ws/")):
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Not found")
+
         file_path = os.path.join(dist_dir, full_path)
         if full_path and os.path.exists(file_path) and os.path.isfile(file_path):
             return FileResponse(file_path)
-        
+
         index_file = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_file):
             return FileResponse(index_file)
-        
+
         return {"status": "online"}
+
+    app.include_router(_spa_router)
 else:
-    @app.get("/")
+    @app.get("/", include_in_schema=False)
     def root():
         return {
             "status": "online",
