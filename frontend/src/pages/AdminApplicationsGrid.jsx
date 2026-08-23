@@ -10,6 +10,7 @@ export default function AdminApplicationsGrid() {
   const [applications, setApplications] = useState([]);
   const [requisitions, setRequisitions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   
   const [selectedReqId, setSelectedReqId] = useState(reqIdParam ? parseInt(reqIdParam) : '');
   const [search, setSearch] = useState('');
@@ -21,6 +22,7 @@ export default function AdminApplicationsGrid() {
 
   const fetchGridData = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const [gridData, reqData] = await Promise.all([
         applicationService.getAdminGrid({
@@ -30,10 +32,11 @@ export default function AdminApplicationsGrid() {
         }),
         requisitionService.getAdminList()
       ]);
-      setApplications(gridData);
-      setRequisitions(reqData);
+      setApplications(gridData || []);
+      setRequisitions(reqData || []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load admin applications grid:", err);
+      setFetchError(err.response?.data?.detail || "Failed to load candidate applications grid. Please check your admin session.");
     } finally {
       setLoading(false);
     }
@@ -154,7 +157,17 @@ export default function AdminApplicationsGrid() {
         </div>
 
         {/* Applications Grid Table matching Wireframe 8.8 */}
-        {loading ? (
+        {fetchError ? (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center max-w-lg mx-auto space-y-3">
+            <p className="text-sm font-bold text-red-700">{fetchError}</p>
+            <button
+              onClick={fetchGridData}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm"
+            >
+              Retry Loading Applications
+            </button>
+          </div>
+        ) : loading ? (
           <div className="py-20 text-center text-slate-500">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-blue-600 mb-3" />
             <p className="text-sm font-medium">Loading candidate applications grid...</p>

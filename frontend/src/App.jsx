@@ -14,15 +14,16 @@ import AdminRequisitions from './pages/AdminRequisitions';
 import AdminApplicationsGrid from './pages/AdminApplicationsGrid';
 import { Bell } from 'lucide-react';
 
-// Guarantees that opening or reloading the site always lands on the Browse Jobs page
+// Guarantees that opening the root site path '/' lands on Browse Jobs without interfering with admin routes
 function InitialHomeRedirect() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (window.location.pathname.startsWith('/admin')) {
+    if (location.pathname === '/' || location.pathname === '') {
       navigate('/jobs', { replace: true });
     }
-  }, []);
+  }, [location.pathname]);
 
   return null;
 }
