@@ -59,6 +59,8 @@ export default function AuthModal() {
 
       if (pendingApplyReqId) {
         navigate(`/apply/${pendingApplyReqId}`);
+      } else {
+        navigate('/jobs');
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid email address or password. Please check your credentials.');
@@ -100,6 +102,8 @@ export default function AuthModal() {
 
       if (pendingApplyReqId) {
         navigate(`/apply/${pendingApplyReqId}`);
+      } else {
+        navigate('/jobs');
       }
     } catch (err) {
       const errMsg = err.response?.data?.detail || 'Registration failed.';
@@ -272,9 +276,10 @@ export default function AuthModal() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Last Name</label>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Last Name *</label>
                     <input
                       type="text"
+                      required
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Last name"
@@ -350,7 +355,7 @@ export default function AuthModal() {
 
                 <button
                   type="submit"
-                  disabled={loading || !email || !password || !firstName || !mobile}
+                  disabled={loading || !email || !password || !confirmPassword || !firstName || !lastName || !mobile}
                   className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-1"
                 >
                   {loading ? 'Creating Account...' : 'Create Account & Sign In'} <ArrowRight className="w-4 h-4" />

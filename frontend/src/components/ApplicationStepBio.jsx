@@ -70,8 +70,9 @@ export default function ApplicationStepBio({ data, onChange, onNext }) {
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Gender</label>
+          <label className="text-xs font-bold text-slate-700 block mb-1">Gender *</label>
           <select
+            required
             value={data.gender || ''}
             onChange={(e) => onChange('gender', e.target.value)}
             className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
@@ -85,9 +86,10 @@ export default function ApplicationStepBio({ data, onChange, onNext }) {
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Date of Birth</label>
+          <label className="text-xs font-bold text-slate-700 block mb-1">Date of Birth *</label>
           <input
             type="date"
+            required
             value={data.dob || ''}
             onChange={(e) => onChange('dob', e.target.value)}
             className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -95,7 +97,7 @@ export default function ApplicationStepBio({ data, onChange, onNext }) {
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Current Location *</label>
+          <label className="text-xs font-bold text-slate-700 block mb-1">Current Location *</label>
           <input
             type="text"
             required
@@ -107,8 +109,9 @@ export default function ApplicationStepBio({ data, onChange, onNext }) {
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Notice Period</label>
+          <label className="text-xs font-bold text-slate-700 block mb-1">Notice Period *</label>
           <select
+            required
             value={data.notice_period || ''}
             onChange={(e) => onChange('notice_period', e.target.value)}
             className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer"
@@ -123,20 +126,21 @@ export default function ApplicationStepBio({ data, onChange, onNext }) {
         </div>
 
         <div className="sm:col-span-2">
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Current Company</label>
+          <label className="text-xs font-bold text-slate-700 block mb-1">Current Company</label>
           <input
             type="text"
             value={data.current_company || ''}
             onChange={(e) => onChange('current_company', e.target.value)}
-            placeholder="Optional if candidate is a fresher"
+            placeholder="N/A if candidate is a fresher"
             className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
 
         <div className="sm:col-span-2">
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Current Address</label>
+          <label className="text-xs font-bold text-slate-700 block mb-1">Current Address *</label>
           <textarea
             rows={2}
+            required
             value={data.current_address || ''}
             onChange={(e) => onChange('current_address', e.target.value)}
             placeholder="Street, City, State, PIN/ZIP"

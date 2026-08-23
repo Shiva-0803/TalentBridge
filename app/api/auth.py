@@ -161,7 +161,6 @@ def verify_otp(request: VerifyOTPRequest, db: Session = Depends(get_db)):
 
 @router.post("/admin-login", response_model=Token)
 @router.post("/admin/login", response_model=Token)
-@router.post("/login", response_model=Token)
 def admin_login(request: AdminLoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == request.email.lower().strip(), User.role == "admin").first()
     if not user or not verify_password(request.password, user.password_hash):

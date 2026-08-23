@@ -117,18 +117,19 @@ export default function ApplicationStepEducation({ records, onChange, onNext, on
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Specialization</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Specialization *</label>
                 <input
                   type="text"
+                  required
                   placeholder="e.g. Computer Science, Finance"
                   value={rec.specialization || ''}
                   onChange={(e) => handleItemChange(index, 'specialization', e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Year of Passing *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Year of Passing *</label>
                 <input
                   type="number"
                   required
@@ -137,18 +138,19 @@ export default function ApplicationStepEducation({ records, onChange, onNext, on
                   max="2030"
                   value={rec.year_of_passing || ''}
                   onChange={(e) => handleItemChange(index, 'year_of_passing', e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Grade / CGPA / %</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Grade / CGPA / % *</label>
                 <input
                   type="text"
+                  required
                   placeholder="e.g. 8.5 CGPA or 82%"
                   value={rec.grade || ''}
                   onChange={(e) => handleItemChange(index, 'grade', e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 

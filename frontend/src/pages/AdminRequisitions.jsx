@@ -50,11 +50,11 @@ export default function AdminRequisitions() {
     setFormData({
       job_title: '',
       department: 'Engineering',
-      location: '',
+      location: 'Hyderabad',
       employment_type: 'Full-time',
-      experience_range: '',
+      experience_range: '0-1 Years (Fresher)',
       openings: 1,
-      hiring_manager: '',
+      hiring_manager: 'HR Recruiting Team',
       max_salary_budget: '',
       hiring_target_date: '',
       job_description: '',
@@ -316,128 +316,150 @@ export default function AdminRequisitions() {
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Company Name</label>
+                  <input
+                    type="text"
+                    disabled
+                    value="TalentBridge"
+                    className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 cursor-not-allowed"
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Job Title *</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Job Title / Role *</label>
                     <input
                       type="text"
                       required
                       value={formData.job_title}
                       onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
-                      placeholder="e.g. Senior Backend Engineer"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="e.g. Full Stack Developer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Department *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.department}
-                      onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      placeholder="e.g. Engineering"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Location *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      placeholder="e.g. Hyderabad, IN (Hybrid) or Remote"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Employment Type *</label>
-                    <select
-                      value={formData.employment_type}
-                      onChange={(e) => setFormData({ ...formData, employment_type: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    >
-                      <option value="Full-time">Full-time</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Contract">Contract</option>
-                      <option value="Internship">Internship</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Experience Range *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.experience_range}
-                      onChange={(e) => setFormData({ ...formData, experience_range: e.target.value })}
-                      placeholder="e.g. 5-8 years"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Number of Openings *</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Number of Openings *</label>
                     <input
                       type="number"
                       required
                       min="1"
                       value={formData.openings}
                       onChange={(e) => setFormData({ ...formData, openings: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Hiring Manager *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.hiring_manager}
-                      onChange={(e) => setFormData({ ...formData, hiring_manager: e.target.value })}
-                      placeholder="e.g. Amit Verma"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  {/* Page 14 Field: Maximum Salary Budget */}
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Maximum Salary Budget</label>
-                    <input
-                      type="text"
-                      value={formData.max_salary_budget}
-                      onChange={(e) => setFormData({ ...formData, max_salary_budget: e.target.value })}
-                      placeholder="e.g. $120,000 - $150,000 PA"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  {/* Page 14 Field: Hiring shall be completed by */}
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">Hiring Target Date</label>
-                    <input
-                      type="date"
-                      value={formData.hiring_target_date}
-                      onChange={(e) => setFormData({ ...formData, hiring_target_date: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
                     />
                   </div>
                 </div>
 
+                {/* Department Radio Options */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 block mb-1">Job Description & Responsibilities *</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">Department *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Engineering', 'Product & Design', 'Human Resources', 'Sales & Marketing', 'Customer Support', 'Finance & Operations', 'Quality Assurance'].map((dept) => (
+                      <button
+                        key={dept}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, department: dept })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          formData.department === dept
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {dept}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Location Radio Options */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">Location *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Hyderabad', 'Bangalore', 'Mumbai', 'Delhi NCR', 'Chennai', 'Pune', 'Remote'].map((loc) => (
+                      <button
+                        key={loc}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, location: loc })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          formData.location === loc
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {loc}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Employment Type Radio Options */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">Employment Type *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, employment_type: type })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          formData.employment_type === type
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Experience Range Radio Options */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">Experience Range *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['0-1 Years (Fresher)', '1-3 Years', '3-5 Years', '5-8 Years', '8+ Years'].map((exp) => (
+                      <button
+                        key={exp}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, experience_range: exp })}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          formData.experience_range === exp
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {exp}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Salary Budget in ₹ Rupees */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Maximum Salary Budget (in ₹ Rupees) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.max_salary_budget}
+                    onChange={(e) => setFormData({ ...formData, max_salary_budget: e.target.value })}
+                    placeholder="e.g. ₹ 6,00,000 - ₹ 12,00,000 PA or ₹ 50,000 / month"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Job Description & Responsibilities *</label>
                   <textarea
-                    rows={6}
+                    rows={5}
                     required
                     value={formData.job_description}
                     onChange={(e) => setFormData({ ...formData, job_description: e.target.value })}
                     placeholder="Enter detailed responsibilities, key requirements, and company culture overview..."
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none resize-y"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none resize-y"
                   />
                 </div>
 
