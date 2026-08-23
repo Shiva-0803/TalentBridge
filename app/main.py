@@ -2,9 +2,7 @@ import os
 import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, Response
 
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
@@ -41,96 +39,12 @@ def auto_seed_db():
             )
             db.add(admin)
             db.commit()
+            print("[AUTO SEED] Admin account verified.")
 
-        # Seed Jobs if no requisitions exist
-        if db.query(JobRequisition).count() == 0:
-            now = datetime.datetime.utcnow()
-            default_jobs = [
-                JobRequisition(
-                    requisition_id="REQ-2026-00101",
-                    job_title="Senior Python & AI Engineer",
-                    department="Engineering",
-                    location="Bangalore, India",
-                    employment_type="Full-time",
-                    experience_range="4-7 years",
-                    openings=3,
-                    hiring_manager="Admin",
-                    max_salary_budget="₹2,500,000 - ₹3,500,000 PA",
-                    hiring_target_date="2026-10-31",
-                    job_description="We are seeking an experienced Senior Python Developer with expertise in FastAPI, SQLAlchemy, and LLM orchestration to lead core backend architectural services.",
-                    status="Published",
-                    created_at=now,
-                    posted_at=now
-                ),
-                JobRequisition(
-                    requisition_id="REQ-2026-00201",
-                    job_title="Junior Python & AI Trainee (Fresher)",
-                    department="Engineering",
-                    location="Pune, India",
-                    employment_type="Full-time",
-                    experience_range="Fresher (0-1 year)",
-                    openings=5,
-                    hiring_manager="Admin",
-                    max_salary_budget="₹600,000 - ₹900,000 PA",
-                    hiring_target_date="2026-11-15",
-                    job_description="Exciting entry-level role for fresh computer science graduates. Receive hands-on training in Python microservices, FastAPI, and AI integration.",
-                    status="Published",
-                    created_at=now,
-                    posted_at=now
-                ),
-                JobRequisition(
-                    requisition_id="REQ-2026-00202",
-                    job_title="Graduate Engineer Trainee - Full Stack React",
-                    department="Engineering",
-                    location="Hyderabad, India",
-                    employment_type="Full-time",
-                    experience_range="Fresher (0-1 year)",
-                    openings=4,
-                    hiring_manager="Admin",
-                    max_salary_budget="₹550,000 - ₹850,000 PA",
-                    hiring_target_date="2026-11-15",
-                    job_description="Great opportunity for entry-level developers passionate about modern frontend engineering with React, JavaScript, Vite, and Tailwind CSS.",
-                    status="Published",
-                    created_at=now,
-                    posted_at=now
-                ),
-                JobRequisition(
-                    requisition_id="REQ-2026-00203",
-                    job_title="Associate Data Analyst - Fresher Batch 2026",
-                    department="Data Science",
-                    location="Chennai, India",
-                    employment_type="Full-time",
-                    experience_range="Fresher (0-1 year)",
-                    openings=3,
-                    hiring_manager="Admin",
-                    max_salary_budget="₹650,000 - ₹950,000 PA",
-                    hiring_target_date="2026-11-15",
-                    job_description="Analyze datasets, build SQL queries, and construct interactive performance dashboards for enterprise candidate sourcing pipelines.",
-                    status="Published",
-                    created_at=now,
-                    posted_at=now
-                ),
-                JobRequisition(
-                    requisition_id="REQ-2026-00204",
-                    job_title="Junior QA & Software Tester (Fresher)",
-                    department="Engineering",
-                    location="Kolkata, India",
-                    employment_type="Full-time",
-                    experience_range="Fresher (0-1 year)",
-                    openings=2,
-                    hiring_manager="Admin",
-                    max_salary_budget="₹500,000 - ₹750,000 PA",
-                    hiring_target_date="2026-11-15",
-                    job_description="Entry-level quality assurance position focusing on automated API testing, regression test suites, and UI user flow verification.",
-                    status="Published",
-                    created_at=now,
-                    posted_at=now
-                )
-            ]
-            for job in default_jobs:
-                db.add(job)
-            db.commit()
-            print("[AUTO SEED] Default job requisitions created successfully.")
+        # Clear sample job requisitions per user request
+        deleted_count = db.query(JobRequisition).delete()
+        db.commit()
+        print(f"[CLEANUP] Cleared {deleted_count} job requisition(s). Browse jobs is now clean.")
         db.close()
     except Exception as e:
         print(f"[AUTO SEED ERROR] {e}")
@@ -146,14 +60,11 @@ app = FastAPI(
 # Enable CORS for React frontend cross-origin requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # Allow all origins for dev/demo environment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# GZip compression - dramatically reduces API response sizes
-app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Mount Uploads directory for resume download/preview access
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
@@ -167,38 +78,21 @@ app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.ws_router, prefix=settings.API_V1_STR)
 
 # Mount Built React Frontend Dist Bundle for Full-Stack Cloud Serving
+from fastapi.responses import FileResponse
 from fastapi.routing import APIRouter as _SpaRouter
 
 dist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dist")
 if os.path.exists(dist_dir):
     assets_dir = os.path.join(dist_dir, "assets")
     if os.path.exists(assets_dir):
-        # Serve assets with long cache headers (content-hashed filenames)
-        @app.get("/assets/{filename:path}", include_in_schema=False)
-        def serve_asset(filename: str):
-            file_path = os.path.join(assets_dir, filename)
-            if os.path.exists(file_path) and os.path.isfile(file_path):
-                ext = filename.rsplit('.', 1)[-1].lower()
-                media_types = {
-                    'js': 'application/javascript', 'css': 'text/css',
-                    'svg': 'image/svg+xml', 'png': 'image/png',
-                    'ico': 'image/x-icon', 'woff2': 'font/woff2'
-                }
-                media_type = media_types.get(ext, 'application/octet-stream')
-                return FileResponse(
-                    file_path,
-                    media_type=media_type,
-                    headers={"Cache-Control": "public, max-age=31536000, immutable"}
-                )
-            from fastapi import HTTPException
-            raise HTTPException(status_code=404)
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-    # SPA fallback router — added LAST so it never overrides API POST routes
+    # SPA fallback: use a separate router added LAST so it never overrides API POST routes
     _spa_router = _SpaRouter()
 
     @_spa_router.get("/{full_path:path}", include_in_schema=False)
     def serve_frontend_spa(full_path: str):
-        # Never intercept API, docs, uploads, or ws paths
+        # Never intercept API, docs, or uploads paths
         if (full_path.startswith("api/") or full_path == "api"
                 or full_path.startswith("uploads")
                 or full_path.startswith("docs")
@@ -213,10 +107,7 @@ if os.path.exists(dist_dir):
 
         index_file = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_file):
-            return FileResponse(
-                index_file,
-                headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
-            )
+            return FileResponse(index_file)
 
         return {"status": "online"}
 

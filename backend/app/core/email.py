@@ -31,22 +31,32 @@ TalentBridge HR Team
 """
 
     if SMTP_USERNAME and SMTP_PASSWORD:
-        try:
-            msg = MIMEMultipart()
-            msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
-            msg['To'] = to_email
-            msg['Subject'] = subject
-            msg.attach(MIMEText(body, 'plain'))
+        msg = MIMEMultipart()
+        msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
 
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.send_message(msg)
-            server.quit()
-            print(f"[SMTP SUCCESS] OTP email sent to {to_email}")
-            return True, "Email sent"
+        # Try Port 587 TLS first; fallback to Port 465 SSL if TLS fails or times out
+        try:
+            try:
+                server = smtplib.SMTP(SMTP_SERVER, 587, timeout=10)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+                server.quit()
+                print(f"[SMTP TLS SUCCESS] OTP email sent to {to_email}")
+                return True, "Email sent"
+            except Exception as tls_err:
+                print(f"[SMTP TLS WARN] Port 587 failed ({tls_err}). Trying Port 465 SSL fallback...")
+                server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10)
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+                server.quit()
+                print(f"[SMTP SSL SUCCESS] OTP email sent to {to_email}")
+                return True, "Email sent via SSL"
         except Exception as e:
             print(f"[SMTP ERROR] {str(e)}")
             return False, str(e)
@@ -96,9 +106,6 @@ WHAT HAPPENS NEXT?
   3. You can track your application status anytime by logging
      into your TalentBridge Candidate Portal.
 
-Please note that due to the volume of applications we receive,
-only shortlisted candidates will be contacted for further steps.
-
 We appreciate your interest in joining our team and wish you
 the very best in your application!
 
@@ -109,22 +116,31 @@ This is an automated confirmation email. Please do not reply.
 """
 
     if SMTP_USERNAME and SMTP_PASSWORD:
-        try:
-            msg = MIMEMultipart()
-            msg['From'] = f"TalentBridge Careers <{SMTP_USERNAME}>"
-            msg['To'] = to_email
-            msg['Subject'] = subject
-            msg.attach(MIMEText(body, 'plain'))
+        msg = MIMEMultipart()
+        msg['From'] = f"TalentBridge Careers <{SMTP_USERNAME}>"
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
 
-            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.send_message(msg)
-            server.quit()
-            print(f"[SMTP SUCCESS] Confirmation email sent to {to_email} for {application_code}")
-            return True, "Confirmation email sent"
+        try:
+            try:
+                server = smtplib.SMTP(SMTP_SERVER, 587, timeout=10)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+                server.quit()
+                print(f"[SMTP TLS SUCCESS] Confirmation email sent to {to_email}")
+                return True, "Email sent"
+            except Exception as tls_err:
+                print(f"[SMTP TLS WARN] Port 587 failed ({tls_err}). Trying Port 465 SSL fallback...")
+                server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10)
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+                server.quit()
+                print(f"[SMTP SSL SUCCESS] Confirmation email sent to {to_email}")
+                return True, "Email sent via SSL"
         except Exception as e:
             print(f"[SMTP ERROR] Confirmation email failed: {str(e)}")
             return False, str(e)

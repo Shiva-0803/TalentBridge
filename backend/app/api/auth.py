@@ -75,8 +75,13 @@ async def send_otp(request: SendOTPRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     is_existing = user is not None
 
-    # Send email or log safely without UnicodeEncodeError
-    send_otp_email(email, otp_code)
+    # Send email and check delivery status
+    success, msg = send_otp_email(email, otp_code)
+    if not success:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Email delivery error: {msg}. Please check your email address or try again."
+        )
 
     return {
         "success": True,

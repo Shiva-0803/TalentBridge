@@ -14,13 +14,13 @@ import AdminRequisitions from './pages/AdminRequisitions';
 import AdminApplicationsGrid from './pages/AdminApplicationsGrid';
 import { Bell } from 'lucide-react';
 
-// Guarantees that opening/reloading the site on any admin URL always redirects to the Home page '/'
+// Guarantees that opening or reloading the site always lands on the Browse Jobs page
 function InitialHomeRedirect() {
   const navigate = useNavigate();
 
   useEffect(() => {
     if (window.location.pathname.startsWith('/admin')) {
-      navigate('/', { replace: true });
+      navigate('/jobs', { replace: true });
     }
   }, []);
 
