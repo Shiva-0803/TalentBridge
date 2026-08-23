@@ -225,6 +225,7 @@ async def submit_application(
     }
 
 @router.get("/my")
+@router.get("/my-applications")
 def get_my_applications(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -340,6 +341,7 @@ def get_admin_applications_grid(
     return grid_items
 
 @router.get("/admin/detail/{app_id}")
+@router.get("/admin/{app_id}")
 def get_full_candidate_application(
     app_id: int,
     current_admin: User = Depends(get_current_admin),

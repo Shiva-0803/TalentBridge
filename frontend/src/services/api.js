@@ -104,7 +104,7 @@ export const applicationsService = {
     return response.data;
   },
   getMyApplications: async () => {
-    const response = await api.get('/applications/my-applications');
+    const response = await api.get('/applications/my');
     return response.data;
   },
   updateResume: async (appId, formData) => {
@@ -120,12 +120,15 @@ export const applicationsService = {
     return response.data;
   },
   getAdminDetail: async (id) => {
-    const response = await api.get(`/applications/admin/${id}`);
+    const response = await api.get(`/applications/admin/detail/${id}`);
     return response.data;
   },
   updateStatus: async (id, status) => {
     const response = await api.put(`/applications/admin/${id}/status`, { status });
     return response.data;
+  },
+  getResumeUrl: (appId) => {
+    return `${API_BASE_URL}/applications/admin/resume/${appId}`;
   },
   exportCsv: async (params = {}) => {
     const response = await api.get('/applications/admin/export-csv', {
@@ -133,12 +136,6 @@ export const applicationsService = {
       responseType: 'blob',
     });
     return response.data;
-  },
-  getResumeUrl: (filename) => {
-    if (!filename) return '#';
-    if (filename.startsWith('http')) return filename;
-    const baseHost = API_BASE_URL.replace('/api', '');
-    return `${baseHost}/uploads/${filename}`;
   },
 };
 
@@ -162,6 +159,7 @@ export const notificationsService = {
   },
 };
 
+// Aliases for singular vs plural imports
 export const requisitionService = requisitionsService;
 export const applicationService = applicationsService;
 export const notificationService = notificationsService;
