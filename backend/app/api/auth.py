@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, decode_access_token
-from app.core.email import send_otp_email
+from app.core.email import send_otp_email, send_password_reset_email
 from app.models.domain import User, CandidateProfile, OTPRecord
 from app.schemas.pydantic_schemas import (
     SendOTPRequest, VerifyOTPRequest, AdminLoginRequest,
@@ -354,10 +354,10 @@ async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(
     db.add(otp_entry)
     db.commit()
 
-    send_otp_email(email, otp_code)
+    send_password_reset_email(email, otp_code)
     return {
         "success": True,
-        "message": f"Password reset verification code sent to {email}",
+        "message": f"Password reset verification code sent in real-time to {email}",
         "otp_hint": otp_code
     }
 

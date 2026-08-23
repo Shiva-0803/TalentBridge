@@ -176,6 +176,62 @@ TalentBridge HR Team
         return True, "Logged"
 
 
+def send_password_reset_email(to_email: str, otp_code: str):
+    subject = "Your TalentBridge Password Reset Code"
+    body = f"""Hello,
+
+Your 6-digit verification code to reset your TalentBridge account password is:
+
+        {otp_code}
+
+This code will expire in 10 minutes.
+If you did not request a password reset, please ignore this email or secure your account.
+
+Best regards,
+TalentBridge HR Team
+"""
+
+    # 1. Try HTTPS HTTP API first (Port 443 - never blocked by Render)
+    http_success, http_msg = send_via_http_api(to_email, subject, body)
+    if http_success:
+        return True, http_msg
+
+    # 2. Try Raw SMTP (Ports 587 / 465)
+    if SMTP_USERNAME and SMTP_PASSWORD:
+        msg = MIMEMultipart()
+        msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        try:
+            try:
+                server = smtplib.SMTP(SMTP_SERVER, 587, timeout=10)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+                server.quit()
+                print(f"[SMTP TLS SUCCESS] Password reset email sent to {to_email}")
+                return True, "Email sent"
+            except Exception as tls_err:
+                print(f"[SMTP TLS WARN] Port 587 failed ({tls_err}). Trying Port 465 SSL fallback...")
+                server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10)
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
+                server.quit()
+                print(f"[SMTP SSL SUCCESS] Password reset email sent to {to_email}")
+                return True, "Email sent via SSL"
+        except Exception as e:
+            err_str = str(e)
+            print(f"[SMTP ERROR] {err_str}")
+            return False, f"Email delivery error: {err_str}"
+    else:
+        print(f"[LOG ONLY] Reset OTP for {to_email}: {otp_code}")
+        return True, "Logged"
+
+
 def send_application_confirmation_email(
     to_email: str,
     candidate_name: str,
