@@ -17,14 +17,14 @@ export default function AdminRequisitions() {
 
   const [formData, setFormData] = useState({
     job_title: '',
-    department: 'Engineering',
-    location: 'Hyderabad, IN (Hybrid)',
+    department: '',
+    location: '',
     employment_type: 'Full-time',
-    experience_range: '3-6 years',
+    experience_range: '',
     openings: 1,
-    hiring_manager: 'Admin',
-    max_salary_budget: '$100,000 PA',
-    hiring_target_date: '2026-09-30',
+    hiring_manager: '',
+    max_salary_budget: '',
+    hiring_target_date: '',
     job_description: '',
     status: 'Published'
   });
@@ -49,14 +49,14 @@ export default function AdminRequisitions() {
     setEditingId(null);
     setFormData({
       job_title: '',
-      department: 'Engineering',
-      location: 'Hyderabad, IN (Hybrid)',
+      department: '',
+      location: '',
       employment_type: 'Full-time',
-      experience_range: '3-6 years',
+      experience_range: '',
       openings: 1,
-      hiring_manager: 'Amit Verma (Admin)',
-      max_salary_budget: '$100,000 PA',
-      hiring_target_date: '2026-09-30',
+      hiring_manager: '',
+      max_salary_budget: '',
+      hiring_target_date: '',
       job_description: '',
       status: 'Published'
     });

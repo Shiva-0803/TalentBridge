@@ -14,6 +14,15 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+// Simple in-memory cache (60 second TTL for public endpoints)
+const _cache = new Map();
+const _cacheGet = (key) => {
+  const entry = _cache.get(key);
+  if (entry && Date.now() - entry.t < 60000) return entry.v;
+  return null;
+};
+const _cacheSet = (key, val) => _cache.set(key, { v: val, t: Date.now() });
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -59,11 +68,18 @@ export const authService = {
 // Requisitions Service
 export const requisitionsService = {
   getPublicList: async (params = {}) => {
+    const key = 'publist:' + JSON.stringify(params);
+    const cached = _cacheGet(key);
+    if (cached) return cached;
     const response = await api.get('/requisitions/public', { params });
+    _cacheSet(key, response.data);
     return response.data;
   },
   getPublicFilters: async () => {
+    const cached = _cacheGet('pubfilters');
+    if (cached) return cached;
     const response = await api.get('/requisitions/public/filters');
+    _cacheSet('pubfilters', response.data);
     return response.data;
   },
   getPublicDetail: async (id) => {
@@ -79,10 +95,12 @@ export const requisitionsService = {
     return response.data;
   },
   create: async (data) => {
+    _cache.delete('publist:{}'); // invalidate cache on create
     const response = await api.post('/requisitions/admin', data);
     return response.data;
   },
   update: async (id, data) => {
+    _cache.clear(); // invalidate all cache on update
     const response = await api.put(`/requisitions/admin/${id}`, data);
     return response.data;
   },
@@ -91,6 +109,7 @@ export const requisitionsService = {
     return response.data;
   },
   deleteRequisition: async (id) => {
+    _cache.clear();
     const response = await api.delete(`/requisitions/admin/${id}`);
     return response.data;
   },

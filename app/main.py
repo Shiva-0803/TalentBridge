@@ -2,7 +2,9 @@ import os
 import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, Response
 
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
@@ -144,11 +146,14 @@ app = FastAPI(
 # Enable CORS for React frontend cross-origin requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all origins for dev/demo environment
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# GZip compression - dramatically reduces API response sizes
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Mount Uploads directory for resume download/preview access
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
@@ -162,21 +167,38 @@ app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.ws_router, prefix=settings.API_V1_STR)
 
 # Mount Built React Frontend Dist Bundle for Full-Stack Cloud Serving
-from fastapi.responses import FileResponse
 from fastapi.routing import APIRouter as _SpaRouter
 
 dist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dist")
 if os.path.exists(dist_dir):
     assets_dir = os.path.join(dist_dir, "assets")
     if os.path.exists(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        # Serve assets with long cache headers (content-hashed filenames)
+        @app.get("/assets/{filename:path}", include_in_schema=False)
+        def serve_asset(filename: str):
+            file_path = os.path.join(assets_dir, filename)
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                ext = filename.rsplit('.', 1)[-1].lower()
+                media_types = {
+                    'js': 'application/javascript', 'css': 'text/css',
+                    'svg': 'image/svg+xml', 'png': 'image/png',
+                    'ico': 'image/x-icon', 'woff2': 'font/woff2'
+                }
+                media_type = media_types.get(ext, 'application/octet-stream')
+                return FileResponse(
+                    file_path,
+                    media_type=media_type,
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"}
+                )
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404)
 
-    # SPA fallback: use a separate router added LAST so it never overrides API POST routes
+    # SPA fallback router — added LAST so it never overrides API POST routes
     _spa_router = _SpaRouter()
 
     @_spa_router.get("/{full_path:path}", include_in_schema=False)
     def serve_frontend_spa(full_path: str):
-        # Never intercept API, docs, or uploads paths
+        # Never intercept API, docs, uploads, or ws paths
         if (full_path.startswith("api/") or full_path == "api"
                 or full_path.startswith("uploads")
                 or full_path.startswith("docs")
@@ -191,7 +213,10 @@ if os.path.exists(dist_dir):
 
         index_file = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_file):
-            return FileResponse(index_file)
+            return FileResponse(
+                index_file,
+                headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+            )
 
         return {"status": "online"}
 

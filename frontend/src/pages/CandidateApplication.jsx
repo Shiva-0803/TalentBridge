@@ -39,11 +39,11 @@ export default function CandidateApplication() {
   // Step 2: Education (Repeatable list)
   const [educationRecords, setEducationRecords] = useState([
     {
-      degree: 'B.Tech Computer Science',
-      specialization: 'Software Engineering',
-      institution: 'State Technological University',
-      year_of_passing: '2021',
-      grade: '8.4 CGPA',
+      degree: '',
+      specialization: '',
+      institution: '',
+      year_of_passing: '',
+      grade: '',
       education_level: "Bachelor's"
     }
   ]);
@@ -53,21 +53,21 @@ export default function CandidateApplication() {
   const [experienceRecords, setExperienceRecords] = useState([
     {
       is_fresher: false,
-      employer: 'TechCorp Solutions',
-      job_title: 'Software Engineer',
-      start_date: '2021-07',
+      employer: '',
+      job_title: '',
+      start_date: '',
       end_date: '',
-      currently_working: true,
-      key_responsibilities: 'Engineered backend microservices in Python and SQL database architecture.',
-      years_calculated: 3.0
+      currently_working: false,
+      key_responsibilities: '',
+      years_calculated: 0
     }
   ]);
 
   // Step 4: Resume & Attachments
   const [resumeFile, setResumeFile] = useState(null);
   const [coverNote, setCoverNote] = useState('');
-  const [dataAccuracyConsent, setDataAccuracyConsent] = useState(true);
-  const [privacyConsent, setPrivacyConsent] = useState(true);
+  const [dataAccuracyConsent, setDataAccuracyConsent] = useState(false);
+  const [privacyConsent, setPrivacyConsent] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
