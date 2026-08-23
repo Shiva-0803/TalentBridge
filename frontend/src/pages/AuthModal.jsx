@@ -56,10 +56,15 @@ export default function AuthModal() {
     try {
       const res = await sendOtp(candidateEmail);
       setIsExisting(res.is_existing);
+      if (res.dev_otp) {
+        setOtpCode(res.dev_otp);
+      }
       setSuccessMsg(
-        res.is_existing
-          ? `Welcome back! Verification code sent to ${candidateEmail}.`
-          : `Verification code sent to ${candidateEmail}. Please enter your basic details to create your profile.`
+        res.dev_otp
+          ? `Verification code for ${candidateEmail} is: ${res.dev_otp} (Auto-filled below)`
+          : (res.is_existing
+              ? `Welcome back! Verification code sent to ${candidateEmail}.`
+              : `Verification code sent to ${candidateEmail}. Please enter your basic details to create your profile.`)
       );
       setOtpStep(2);
     } catch (err) {
