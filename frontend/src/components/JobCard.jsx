@@ -9,9 +9,9 @@ export default function JobCard({ job, onShare }) {
 
   const handleApplyClick = () => {
     if (!user) {
-      triggerAuthModal(job.requisition_id);
+      triggerAuthModal(job.id);
     } else {
-      navigate(`/apply/${job.requisition_id}`);
+      navigate(`/apply/${job.id}`);
     }
   };
 
@@ -46,7 +46,7 @@ export default function JobCard({ job, onShare }) {
             {/* Header: Title & Badges */}
             <div className="flex flex-wrap items-center gap-2">
               <Link
-                to={`/jobs/${job.requisition_id}`}
+                to={`/jobs/${job.id}`}
                 className="text-base font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1 block"
               >
                 {job.job_title}
@@ -96,7 +96,7 @@ export default function JobCard({ job, onShare }) {
           
           {/* View Details Button */}
           <Link
-            to={`/jobs/${job.requisition_id}`}
+            to={`/jobs/${job.id}`}
             className="px-3.5 py-2 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-bold text-xs rounded-xl transition-all border border-slate-200 hover:border-blue-200 flex items-center gap-1.5"
             title="View job details"
           >

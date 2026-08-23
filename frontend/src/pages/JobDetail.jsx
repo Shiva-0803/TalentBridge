@@ -31,9 +31,9 @@ export default function JobDetail() {
 
   const handleApplyClick = () => {
     if (!user) {
-      triggerAuthModal(job.requisition_id);
+      triggerAuthModal(job.id);
     } else {
-      navigate(`/apply/${job.requisition_id}`);
+      navigate(`/apply/${job.id}`);
     }
   };
 

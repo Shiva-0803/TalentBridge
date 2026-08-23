@@ -99,12 +99,26 @@ def get_public_filters(db: Session = Depends(get_db)):
     }
 
 @router.get("/public/{id}")
-def get_public_requisition_detail(id: int, db: Session = Depends(get_db)):
+def get_public_requisition_detail(id: str, db: Session = Depends(get_db)):
     """
     Public detailed view of a single published job requisition.
+    Supports lookup by database int ID or string requisition_id (e.g. REQ-2026-00001).
     """
-    req = db.query(JobRequisition).filter(JobRequisition.id == id, JobRequisition.status == "Published").first()
+    req = None
+    if id.isdigit():
+        req = db.query(JobRequisition).filter(JobRequisition.id == int(id)).first()
+
     if not req:
+        clean_req_id = id.strip().replace(" ", "-")
+        req = db.query(JobRequisition).filter(
+            or_(
+                JobRequisition.requisition_id == id.strip(),
+                JobRequisition.requisition_id == clean_req_id,
+                JobRequisition.requisition_id.ilike(f"%{clean_req_id}%")
+            )
+        ).first()
+
+    if not req or req.status != "Published":
         raise HTTPException(status_code=404, detail="Job opening not found or is no longer accepting applications.")
     
     app_count = db.query(Application).filter(Application.requisition_id == req.id).count()
