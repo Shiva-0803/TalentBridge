@@ -14,8 +14,13 @@ class Settings:
 
     # Absolute Database URL for reliable access across environments (supports SQLite and PostgreSQL)
     DEFAULT_DB_PATH: str = os.path.join(BASE_DIR, "candidate_sourcing.db").replace("\\", "/")
-    _raw_db_url: str = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
-    DATABASE_URL: str = _raw_db_url.replace("postgres://", "postgresql://", 1) if _raw_db_url.startswith("postgres://") else _raw_db_url
+    _raw_db_url: str = os.getenv("DATABASE_URL", "").strip()
+
+    # Fallback to SQLite if DATABASE_URL is missing or contains placeholder values like 'hostname'
+    if not _raw_db_url or "hostname" in _raw_db_url or "username:password" in _raw_db_url:
+        DATABASE_URL: str = f"sqlite:///{DEFAULT_DB_PATH}"
+    else:
+        DATABASE_URL: str = _raw_db_url.replace("postgres://", "postgresql://", 1) if _raw_db_url.startswith("postgres://") else _raw_db_url
 
 settings = Settings()
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
