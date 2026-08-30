@@ -354,10 +354,13 @@ async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(
     db.add(otp_entry)
     db.commit()
 
-    try:
-        send_password_reset_email(email, otp_code)
-    except Exception as e:
-        print(f"[RESET EMAIL NOTICE] SMTP delivery attempted: {e}")
+    email_sent, delivery_msg = send_password_reset_email(email, otp_code)
+    if not email_sent:
+        print(f"[RESET EMAIL ERROR] Failed to send email to {email}: {delivery_msg}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Email delivery failure: {delivery_msg}"
+        )
 
     return {
         "success": True,
