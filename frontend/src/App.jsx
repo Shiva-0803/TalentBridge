@@ -18,12 +18,17 @@ import { Bell } from 'lucide-react';
 function InitialHomeRedirect() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (location.pathname === '/' || location.pathname === '') {
-      navigate('/jobs', { replace: true });
+      if (user && user.role === 'admin') {
+        navigate('/admin/requisitions', { replace: true });
+      } else {
+        navigate('/jobs', { replace: true });
+      }
     }
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   return null;
 }

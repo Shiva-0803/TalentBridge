@@ -44,16 +44,18 @@ export default function Navbar() {
 
           {/* Navigation Links with Hover Animations */}
           <div className="hidden md:flex items-center space-x-2 text-sm font-semibold">
-            <Link
-              to="/jobs"
-              className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                isActive('/jobs') || isActive('/')
-                  ? 'bg-blue-50 text-blue-600 shadow-xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-              }`}
-            >
-              Browse Jobs
-            </Link>
+            {(!user || user.role !== 'admin') && (
+              <Link
+                to="/jobs"
+                className={`px-4 py-2 rounded-xl transition-all duration-200 ${
+                  isActive('/jobs') || isActive('/')
+                    ? 'bg-blue-50 text-blue-600 shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                }`}
+              >
+                Browse Jobs
+              </Link>
+            )}
 
             {user && user.role === 'candidate' && (
               <>
@@ -216,15 +218,6 @@ export default function Navbar() {
                           <FileText className="w-4 h-4 text-slate-400" /> My Applications
                         </Link>
                       </>
-                    )}
-                    {user.role === 'admin' && (
-                      <Link
-                        to="/admin/requisitions"
-                        onClick={() => setShowUserDropdown(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                      >
-                        <ShieldCheck className="w-4 h-4 text-blue-600" /> Admin Console
-                      </Link>
                     )}
                     <button
                       onClick={() => {
