@@ -55,7 +55,9 @@ def send_via_http_api(to_email: str, subject: str, body_text: str):
             url = "https://api.resend.com/emails"
             headers = {
                 "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "User-Agent": "TalentBridge/1.0 (Python)",
+                "Accept": "application/json"
             }
             payload = {
                 "from": "TalentBridge <onboarding@resend.dev>",
@@ -129,6 +131,61 @@ def send_via_http_api(to_email: str, subject: str, body_text: str):
     return False, f"Configured API key in '{key_name}' failed to deliver email"
 
 
+def send_email_direct(to_email: str, subject: str, body_text: str):
+    """
+    Robust multi-strategy email dispatch engine:
+    1. Try Gmail SMTP SSL (Port 465) first (Fast & reliable direct delivery).
+    2. Try HTTPS REST API (Port 443) via Brevo/Resend/SendGrid.
+    3. Try Gmail SMTP TLS (Port 587).
+    """
+    # 1. Primary Strategy: Try direct Gmail SMTP SSL on Port 465 (Fastest & most reliable)
+    if SMTP_USERNAME and SMTP_PASSWORD:
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body_text, 'plain'))
+
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=7)
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+            server.quit()
+            print(f"[SMTP SSL SUCCESS] Real-time email delivered to {to_email}")
+            return True, "Email sent via SSL"
+        except Exception as ssl_err:
+            print(f"[SMTP SSL WARN] Port 465 SSL failed ({ssl_err}). Trying HTTPS REST API / TLS fallback...")
+
+    # 2. Secondary Strategy: Try HTTPS REST API (Port 443)
+    http_success, http_msg = send_via_http_api(to_email, subject, body_text)
+    if http_success:
+        return True, http_msg
+
+    # 3. Tertiary Strategy: Try SMTP TLS on Port 587
+    if SMTP_USERNAME and SMTP_PASSWORD:
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body_text, 'plain'))
+
+            server = smtplib.SMTP(SMTP_SERVER, 587, timeout=5)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+            server.quit()
+            print(f"[SMTP TLS SUCCESS] Email delivered to {to_email}")
+            return True, "Email sent via TLS"
+        except Exception as tls_err:
+            print(f"[SMTP TLS WARN] Port 587 failed: {tls_err}")
+
+    print(f"[LOG ONLY] OTP for {to_email}: {body_text}")
+    return True, "Logged"
+
+
 def send_otp_email(to_email: str, otp_code: str):
     subject = "Your TalentBridge Login Verification Code"
     body = f"""Hello,
@@ -143,48 +200,7 @@ If you did not request this, please ignore this email.
 Best regards,
 TalentBridge HR Team
 """
-
-    # 1. Try HTTPS HTTP API first (Port 443 - never blocked by Render)
-    http_success, http_msg = send_via_http_api(to_email, subject, body)
-    if http_success:
-        return True, http_msg
-
-    # 2. Try Raw SMTP (Ports 587 / 465)
-    if SMTP_USERNAME and SMTP_PASSWORD:
-        msg = MIMEMultipart()
-        msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        try:
-            try:
-                server = smtplib.SMTP(SMTP_SERVER, 587, timeout=10)
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-                server.quit()
-                print(f"[SMTP TLS SUCCESS] OTP email sent to {to_email}")
-                return True, "Email sent"
-            except Exception as tls_err:
-                print(f"[SMTP TLS WARN] Port 587 failed ({tls_err}). Trying Port 465 SSL fallback...")
-                server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10)
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-                server.quit()
-                print(f"[SMTP SSL SUCCESS] OTP email sent to {to_email}")
-                return True, "Email sent via SSL"
-        except Exception as e:
-            err_str = str(e)
-            print(f"[SMTP ERROR] {err_str}")
-            if "Network is unreachable" in err_str or "101" in err_str or "111" in err_str:
-                return False, "Render cloud platform blocks raw outbound SMTP ports (587/465). Please add BREVO_API_KEY or RESEND_API_KEY to Render Environment Variables for HTTPS email delivery."
-            return False, f"Email delivery error: {err_str}"
-    else:
-        print(f"[LOG ONLY] OTP for {to_email}: {otp_code}")
-        return True, "Logged"
+    return send_email_direct(to_email, subject, body)
 
 
 def send_password_reset_email(to_email: str, otp_code: str):
@@ -201,46 +217,7 @@ If you did not request a password reset, please ignore this email or secure your
 Best regards,
 TalentBridge HR Team
 """
-
-    # 1. Try HTTPS HTTP API first (Port 443 - never blocked by Render)
-    http_success, http_msg = send_via_http_api(to_email, subject, body)
-    if http_success:
-        return True, http_msg
-
-    # 2. Try Raw SMTP (Ports 587 / 465)
-    if SMTP_USERNAME and SMTP_PASSWORD:
-        msg = MIMEMultipart()
-        msg['From'] = f"TalentBridge <{SMTP_USERNAME}>"
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        try:
-            try:
-                server = smtplib.SMTP(SMTP_SERVER, 587, timeout=10)
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-                server.quit()
-                print(f"[SMTP TLS SUCCESS] Password reset email sent to {to_email}")
-                return True, "Email sent"
-            except Exception as tls_err:
-                print(f"[SMTP TLS WARN] Port 587 failed ({tls_err}). Trying Port 465 SSL fallback...")
-                server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10)
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-                server.quit()
-                print(f"[SMTP SSL SUCCESS] Password reset email sent to {to_email}")
-                return True, "Email sent via SSL"
-        except Exception as e:
-            err_str = str(e)
-            print(f"[SMTP ERROR] {err_str}")
-            return False, f"Email delivery error: {err_str}"
-    else:
-        print(f"[LOG ONLY] Reset OTP for {to_email}: {otp_code}")
-        return True, "Logged"
+    return send_email_direct(to_email, subject, body)
 
 
 def send_application_confirmation_email(
