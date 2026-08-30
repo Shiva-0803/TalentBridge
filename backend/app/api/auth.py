@@ -398,7 +398,7 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
 import os as _os
 
 @router.get("/test-email")
-def test_email_delivery(email: Optional[str] = None):
+def test_email_delivery(email: str = "goudashivasai2@gmail.com"):
     """Debug endpoint: tests Brevo email delivery and returns the exact result/error."""
     try:
         from app.core.email import send_via_brevo_api, SMTP_USERNAME
