@@ -136,12 +136,8 @@ export default function AuthModal() {
     try {
       const res = await authService.forgotPassword(email);
       setCandidateMode('reset');
-      if (res.otp_hint) {
-        setResetOtpCode(res.otp_hint);
-        setSuccessMsg(`Verification code dispatched to ${email}. (Code: ${res.otp_hint})`);
-      } else {
-        setSuccessMsg(res.message || `Reset code sent to ${email}`);
-      }
+      setResetOtpCode('');
+      setSuccessMsg(res.message || `A 6-digit verification code has been dispatched to ${email}. Please check your email inbox.`);
     } catch (err) {
       setError(err.response?.data?.detail || 'No account found with this email address.');
     } finally {

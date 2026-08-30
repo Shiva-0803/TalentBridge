@@ -361,8 +361,7 @@ async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(
 
     return {
         "success": True,
-        "message": f"Verification code generated for {email}",
-        "otp_hint": otp_code
+        "message": f"A 6-digit verification code has been dispatched to {email}. Please check your email inbox."
     }
 
 @router.post("/reset-password")
