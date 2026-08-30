@@ -44,19 +44,6 @@ export default function Navbar() {
 
           {/* Navigation Links with Hover Animations */}
           <div className="hidden md:flex items-center space-x-2 text-sm font-semibold">
-            {(!user || user.role !== 'admin') && (
-              <Link
-                to="/jobs"
-                className={`px-4 py-2 rounded-xl transition-all duration-200 ${
-                  isActive('/jobs') || isActive('/')
-                    ? 'bg-blue-50 text-blue-600 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                }`}
-              >
-                Browse Jobs
-              </Link>
-            )}
-
             {user && user.role === 'candidate' && (
               <>
                 <Link

@@ -140,7 +140,7 @@ export default function PublicJobList() {
                   className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All">All Depts</option>
-                  {filters.departments.filter(d => d !== 'All').map(d => (
+                  {Array.from(new Set(['Engineering', 'Product Design', 'HR', 'Sales & Marketing', 'Customer Support', ...filters.departments.filter(d => d !== 'All')])).map(d => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
@@ -154,7 +154,7 @@ export default function PublicJobList() {
                   className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All">All Locations</option>
-                  {filters.locations.filter(l => l !== 'All').map(l => (
+                  {Array.from(new Set(['Hyderabad', 'Bengaluru', 'Mumbai', 'Pune', 'Delhi NCR', 'Remote', ...filters.locations.filter(l => l !== 'All')])).map(l => (
                     <option key={l} value={l}>{l}</option>
                   ))}
                 </select>
@@ -168,11 +168,7 @@ export default function PublicJobList() {
                   className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All">All Experience</option>
-                  {Array.from(new Set(['Fresher (0-1 year)', ...filters.experiences.filter(ex => ex !== 'All')])).sort((a, b) => {
-                    if (a.toLowerCase().includes('fresher')) return -1;
-                    if (b.toLowerCase().includes('fresher')) return 1;
-                    return a.localeCompare(b);
-                  }).map(ex => (
+                  {Array.from(new Set(['Fresher', '0-3 Years', '4-6 Years', '7-9 Years', '10+ Years', ...filters.experiences.filter(ex => ex !== 'All')])).map(ex => (
                     <option key={ex} value={ex}>{ex}</option>
                   ))}
                 </select>

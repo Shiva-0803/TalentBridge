@@ -44,13 +44,15 @@ def list_public_requisitions(
         )
 
     if department and department != "All":
-        query = query.filter(JobRequisition.department == department)
+        dept_clean = department.split('&')[0].strip() if '&' in department else department.split()[0].strip()
+        query = query.filter(JobRequisition.department.ilike(f"%{dept_clean}%"))
 
     if location and location != "All":
         query = query.filter(JobRequisition.location.ilike(f"%{location}%"))
 
     if experience and experience != "All":
-        query = query.filter(JobRequisition.experience_range.ilike(f"%{experience}%"))
+        exp_clean = experience.split('-')[0].split('+')[0].strip() if ('-' in experience or '+' in experience) else experience.strip()
+        query = query.filter(JobRequisition.experience_range.ilike(f"%{exp_clean}%"))
 
     requisitions = query.order_by(JobRequisition.posted_at.desc(), JobRequisition.id.desc()).all()
     
