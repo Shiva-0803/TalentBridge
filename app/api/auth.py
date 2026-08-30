@@ -398,21 +398,27 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
 import os as _os
 
 @router.get("/test-email")
-def test_email_delivery():
-    """Debug endpoint: tests email delivery and returns the exact result/error."""
-    from app.core.email import send_via_http_api, SMTP_USERNAME, SMTP_PASSWORD, get_http_api_key
-    key_name, api_key = get_http_api_key()
+def test_email_delivery(email: Optional[str] = None):
+    """Debug endpoint: tests Brevo email delivery and returns the exact result/error."""
+    from app.core.email import send_via_brevo_api, SMTP_USERNAME
+    target_email = email or "goudashivasai2@gmail.com"
+    brevo_key = _os.getenv("BREVO_API_KEY") or _os.getenv("BREVO") or ""
+    if not brevo_key:
+        for k, v in _os.environ.items():
+            if v.strip().startswith("xkeysib-"):
+                brevo_key = v.strip()
+                break
+
     env_vars = {
-        "RESEND_API_KEY": bool(_os.getenv("RESEND_API_KEY")),
-        "BREVO_API_KEY": bool(_os.getenv("BREVO_API_KEY")),
+        "BREVO_API_KEY_PRESENT": bool(brevo_key),
+        "BREVO_KEY_PREFIX": brevo_key[:8] + "..." if brevo_key else None,
         "SMTP_USERNAME": SMTP_USERNAME,
-        "key_detected": key_name,
-        "key_prefix": api_key[:8] + "..." if api_key else None
+        "target_email": target_email
     }
-    success, msg = send_via_http_api(
-        to_email=SMTP_USERNAME or "test@example.com",
-        subject="TalentBridge Email Test",
-        body_text="This is a test email from TalentBridge to verify email delivery is working correctly."
+    success, msg = send_via_brevo_api(
+        to_email=target_email,
+        subject="TalentBridge Brevo OTP Test",
+        body_text="Your 6-digit verification code is: 999888. This is a real-time test."
     )
     return {
         "env": env_vars,
