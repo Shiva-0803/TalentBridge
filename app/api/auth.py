@@ -400,27 +400,34 @@ import os as _os
 @router.get("/test-email")
 def test_email_delivery(email: Optional[str] = None):
     """Debug endpoint: tests Brevo email delivery and returns the exact result/error."""
-    from app.core.email import send_via_brevo_api, SMTP_USERNAME
-    target_email = email or "goudashivasai2@gmail.com"
-    brevo_key = _os.getenv("BREVO_API_KEY") or _os.getenv("BREVO") or ""
-    if not brevo_key:
-        for k, v in _os.environ.items():
-            if v.strip().startswith("xkeysib-"):
-                brevo_key = v.strip()
-                break
+    try:
+        from app.core.email import send_via_brevo_api, SMTP_USERNAME
+        target_email = email or "goudashivasai2@gmail.com"
+        brevo_key = _os.getenv("BREVO_API_KEY") or _os.getenv("BREVO") or ""
+        if not brevo_key:
+            for k, v in _os.environ.items():
+                if v.strip().startswith("xkeysib-"):
+                    brevo_key = v.strip()
+                    break
 
-    env_vars = {
-        "BREVO_API_KEY_PRESENT": bool(brevo_key),
-        "BREVO_KEY_PREFIX": brevo_key[:8] + "..." if brevo_key else None,
-        "SMTP_USERNAME": SMTP_USERNAME,
-        "target_email": target_email
-    }
-    success, msg = send_via_brevo_api(
-        to_email=target_email,
-        subject="TalentBridge Brevo OTP Test",
-        body_text="Your 6-digit verification code is: 999888. This is a real-time test."
-    )
-    return {
-        "env": env_vars,
-        "email_result": {"success": success, "message": msg}
-    }
+        env_vars = {
+            "BREVO_API_KEY_PRESENT": bool(brevo_key),
+            "BREVO_KEY_PREFIX": brevo_key[:8] + "..." if brevo_key else None,
+            "SMTP_USERNAME": SMTP_USERNAME,
+            "target_email": target_email
+        }
+        success, msg = send_via_brevo_api(
+            to_email=target_email,
+            subject="TalentBridge Brevo OTP Test",
+            body_text="Your 6-digit verification code is: 999888. This is a real-time test."
+        )
+        return {
+            "env": env_vars,
+            "email_result": {"success": success, "message": msg}
+        }
+    except Exception as exc:
+        import traceback
+        return {
+            "error": str(exc),
+            "traceback": traceback.format_exc()
+        }
