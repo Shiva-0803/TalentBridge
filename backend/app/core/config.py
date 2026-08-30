@@ -12,9 +12,10 @@ class Settings:
     UPLOAD_DIR: str = os.path.join(BASE_DIR, "uploads")
     MAX_FILE_SIZE_MB: int = 5
 
-    # Absolute Database URL for reliable SQLite access across environments
+    # Absolute Database URL for reliable access across environments (supports SQLite and PostgreSQL)
     DEFAULT_DB_PATH: str = os.path.join(BASE_DIR, "candidate_sourcing.db").replace("\\", "/")
-    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
+    _raw_db_url: str = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
+    DATABASE_URL: str = _raw_db_url.replace("postgres://", "postgresql://", 1) if _raw_db_url.startswith("postgres://") else _raw_db_url
 
 settings = Settings()
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
