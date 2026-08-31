@@ -70,7 +70,7 @@ async def submit_application(
     if existing_app:
         raise HTTPException(
             status_code=400,
-            detail=f"You have already applied for '{req.job_title}'. Duplicate applications are not allowed."
+            detail=f"You have already submitted an application for '{req.job_title}' with Application Code '{existing_app.application_code}'. Candidates cannot submit duplicate applications for the same job role."
         )
 
     # 3. Validate Resume File

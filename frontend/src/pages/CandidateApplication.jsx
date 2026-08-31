@@ -69,19 +69,37 @@ export default function CandidateApplication() {
   const [dataAccuracyConsent, setDataAccuracyConsent] = useState(true);
   const [privacyConsent, setPrivacyConsent] = useState(true);
 
+  const [alreadyAppliedApp, setAlreadyAppliedApp] = useState(null);
+
   useEffect(() => {
-    const fetchJob = async () => {
+    const fetchJobAndCheckApplication = async () => {
       try {
         const data = await requisitionService.getPublicDetail(reqId);
         setJob(data);
+
+        // If candidate is logged in, check if they already applied for this job
+        if (user && user.role === 'candidate') {
+          try {
+            const myApps = await applicationService.getMyApplications();
+            const existing = myApps.find(
+              (app) => String(app.requisition_id) === String(data.id) || 
+                       String(app.requisition_id) === String(data.requisition_id)
+            );
+            if (existing) {
+              setAlreadyAppliedApp(existing);
+            }
+          } catch (e) {
+            console.error('Error checking existing application:', e);
+          }
+        }
       } catch (err) {
         setError('Job opening not found or no longer accepting applications.');
       } finally {
         setLoadingJob(false);
       }
     };
-    fetchJob();
-  }, [reqId]);
+    fetchJobAndCheckApplication();
+  }, [reqId, user]);
 
   const handleBioDataChange = (field, value) => {
     setBioData((prev) => ({ ...prev, [field]: value }));
@@ -130,6 +148,65 @@ export default function CandidateApplication() {
         <div className="text-center text-slate-500">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p className="text-sm font-medium">Preparing application form...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Already Applied View
+  if (alreadyAppliedApp && job) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-8 border border-emerald-200 shadow-xl text-center max-w-lg w-full space-y-5">
+          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full flex items-center justify-center mx-auto shadow-xs">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          
+          <div className="space-y-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Application Submitted
+            </span>
+            <h2 className="text-2xl font-black text-slate-900 pt-2">
+              You Have Already Applied
+            </h2>
+            <p className="text-xs font-medium text-slate-500">
+              Position: <strong className="text-slate-800">{job.job_title}</strong> ({job.requisition_id})
+            </p>
+          </div>
+
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left space-y-2 text-xs">
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-medium">Application Code:</span>
+              <span className="font-mono font-bold text-emerald-700">{alreadyAppliedApp.application_code}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-medium">Submitted Date:</span>
+              <span className="font-semibold text-slate-700">{alreadyAppliedApp.submitted_at}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500 font-medium">Current Status:</span>
+              <span className="font-extrabold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded">{alreadyAppliedApp.status}</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Candidates cannot submit duplicate applications for the same job role. You can track your application status anytime from your portal.
+          </p>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate('/my-applications')}
+              className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-500/20 transition-all"
+            >
+              View My Applications
+            </button>
+            <button
+              onClick={() => navigate('/jobs')}
+              className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-colors"
+            >
+              Browse Other Jobs
+            </button>
+          </div>
         </div>
       </div>
     );
