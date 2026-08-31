@@ -199,3 +199,51 @@ This is an automated confirmation email. Please do not reply.
 """
 
     return send_email_direct(to_email, subject, body)
+
+
+def send_status_update_email(
+    to_email: str,
+    candidate_name: str,
+    application_code: str,
+    job_title: str,
+    requisition_id: str,
+    new_status: str,
+):
+    """
+    Sends a real-time email notification to the candidate when their application status is updated.
+    """
+    subject = f"Application Status Update - {job_title} ({new_status}) | TalentBridge"
+
+    status_message = {
+        "Reviewed": "Your application and profile have been reviewed by our talent acquisition team.",
+        "Shortlisted": "Great news! Your profile has been shortlisted for the next interview round. Our recruitment team will contact you shortly.",
+        "Rejected": "Thank you for your interest in TalentBridge. After careful consideration, we have decided to proceed with other candidates whose qualifications more closely align with our current role requirements.",
+        "New": "Your application has been received and added to our review queue."
+    }.get(new_status, f"Your application status has been updated to '{new_status}'.")
+
+    body = f"""Dear {candidate_name},
+
+We are writing to inform you of an update on your job application for {job_title}.
+
+---------------------------------------------------------
+  APPLICATION STATUS UPDATE
+---------------------------------------------------------
+
+  Application ID   : {application_code}
+  Position Applied : {job_title}
+  Requisition ID   : {requisition_id}
+  Updated Status   : {new_status.upper()}
+
+---------------------------------------------------------
+
+DETAILS:
+  {status_message}
+
+You can log into your TalentBridge Candidate Portal anytime to view complete application details or update your profile.
+
+Best regards,
+TalentBridge Talent Acquisition Team
+---------------------------------------------------------
+This is an automated status notification. Please do not reply.
+"""
+    return send_email_direct(to_email, subject, body)

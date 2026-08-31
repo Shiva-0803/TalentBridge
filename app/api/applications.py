@@ -13,7 +13,7 @@ from sqlalchemy import or_
 from app.core.database import get_db
 from app.core.config import settings
 from app.core.websockets import manager
-from app.core.email import send_application_confirmation_email
+from app.core.email import send_application_confirmation_email, send_status_update_email
 from app.models.domain import (
     User, CandidateProfile, JobRequisition, Application,
     EducationRecord, WorkExperienceRecord, Notification
@@ -434,7 +434,10 @@ def update_application_status(
 
     # Create notification for candidate
     req = db.query(JobRequisition).filter(JobRequisition.id == app.requisition_id).first()
+    candidate = db.query(User).filter(User.id == app.candidate_id).first()
     job_title = req.job_title if req else "your position"
+    req_id_str = req.requisition_id if req else "REQ-00000"
+    candidate_name = f"{candidate.first_name} {candidate.last_name}".strip() if candidate else "Candidate"
     
     cand_notif = Notification(
         user_id=app.candidate_id,
@@ -445,6 +448,19 @@ def update_application_status(
     )
     db.add(cand_notif)
     db.commit()
+
+    if candidate and candidate.email:
+        try:
+            send_status_update_email(
+                to_email=candidate.email,
+                candidate_name=candidate_name,
+                application_code=app.application_code,
+                job_title=job_title,
+                requisition_id=req_id_str,
+                new_status=status_update.status
+            )
+        except Exception as e:
+            print(f"[STATUS EMAIL NOTICE] Could not send status update email: {e}")
 
     return {"message": "Status updated successfully", "id": app_id, "status": app.status}
 
