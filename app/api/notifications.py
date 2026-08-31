@@ -35,6 +35,7 @@ def get_unread_count(
     ).count()
     return {"unread_count": count}
 
+@router.put("/{id}/read")
 @router.patch("/{id}/read")
 def mark_notification_read(
     id: int,
@@ -47,6 +48,7 @@ def mark_notification_read(
         db.commit()
     return {"message": "Notification marked as read", "id": id}
 
+@router.put("/read-all")
 @router.patch("/read-all")
 def mark_all_notifications_read(
     current_user: User = Depends(get_current_user),

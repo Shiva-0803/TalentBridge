@@ -13,8 +13,26 @@ export default function Navbar() {
 
   const handleMarkAllRead = async () => {
     try {
+      await notificationService.markAllRead();
       await notificationService.markAllAsRead();
       fetchNotifications();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleNotificationClick = async (n) => {
+    try {
+      if (!n.is_read) {
+        await notificationService.markRead(n.id);
+        fetchNotifications();
+      }
+      setShowNotifDropdown(false);
+      if (user?.role === 'candidate') {
+        navigate('/my-applications');
+      } else if (user?.role === 'admin') {
+        navigate('/admin/applications');
+      }
     } catch (err) {
       console.error(err);
     }
@@ -136,19 +154,25 @@ export default function Navbar() {
                         notifications.slice(0, 10).map((n) => (
                           <div
                             key={n.id}
-                            className={`p-3.5 transition-colors hover:bg-slate-50 ${
-                              !n.is_read ? 'bg-blue-50/60 font-medium' : ''
+                            onClick={() => handleNotificationClick(n)}
+                            className={`p-3.5 transition-colors cursor-pointer hover:bg-slate-100/80 ${
+                              !n.is_read ? 'bg-blue-50/70 font-semibold border-l-4 border-blue-600' : 'opacity-85'
                             }`}
                           >
                             <div className="flex items-start gap-2.5">
-                              <div className="mt-0.5 text-blue-600">
+                              <div className={`mt-0.5 ${!n.is_read ? 'text-blue-600' : 'text-slate-400'}`}>
                                 <CheckCircle className="w-4 h-4" />
                               </div>
-                              <div className="flex-1">
-                                <p className="text-slate-900 font-bold">{n.title}</p>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <p className="text-slate-900 font-bold">{n.title}</p>
+                                  {!n.is_read && (
+                                    <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" title="Unread"></span>
+                                  )}
+                                </div>
                                 <p className="text-slate-600 mt-0.5 leading-snug">{n.message}</p>
                                 <span className="text-[10px] text-slate-400 mt-1 block font-mono">
-                                  {new Date(n.created_at).toLocaleString()}
+                                  {new Date(n.created_at || Date.now()).toLocaleString()}
                                 </span>
                               </div>
                             </div>

@@ -169,6 +169,10 @@ export const notificationsService = {
     const response = await api.put('/notifications/read-all');
     return response.data;
   },
+  markAllAsRead: async () => {
+    const response = await api.put('/notifications/read-all');
+    return response.data;
+  },
 };
 
 // Aliases for singular vs plural imports
