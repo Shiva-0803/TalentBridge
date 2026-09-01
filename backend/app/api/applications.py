@@ -540,7 +540,7 @@ async def update_resume(
 @router.get("/export-csv")
 @router.get("/admin/export-csv")
 def export_applications_csv(
-    requisition_id: Optional[int] = Query(None),
+    requisition_id: Optional[str] = Query(None),
     current_admin: User = Depends(get_current_admin),
     db: Session = Depends(get_db)
 ):
@@ -548,9 +548,16 @@ def export_applications_csv(
     FR-ADM-05 Admin can export the applications grid for a requisition to CSV.
     """
     try:
+        req_id_int = None
+        if requisition_id and str(requisition_id).strip() and str(requisition_id).strip().lower() not in ["null", "undefined", "none", ""]:
+            try:
+                req_id_int = int(requisition_id)
+            except ValueError:
+                pass
+
         query = db.query(Application)
-        if requisition_id:
-            query = query.filter(Application.requisition_id == requisition_id)
+        if req_id_int:
+            query = query.filter(Application.requisition_id == req_id_int)
 
         apps = query.order_by(Application.submitted_at.desc()).all()
 

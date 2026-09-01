@@ -143,8 +143,12 @@ export const applicationsService = {
     return `${API_BASE_URL}/applications/admin/resume/${appId}`;
   },
   exportCsv: async (params = {}) => {
+    const cleanParams = {};
+    if (params && params.requisition_id) {
+      cleanParams.requisition_id = params.requisition_id;
+    }
     const response = await api.get('/applications/admin/export-csv', {
-      params,
+      params: cleanParams,
       responseType: 'blob',
     });
     return response.data;

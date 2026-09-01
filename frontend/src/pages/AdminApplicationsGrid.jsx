@@ -77,6 +77,19 @@ export default function AdminApplicationsGrid() {
   const handleExportCsv = async () => {
     try {
       const data = await applicationService.exportCsv({ requisition_id: selectedReqId || null });
+      
+      // If server returned error JSON wrapped in Blob
+      if (data && data.type === 'application/json') {
+        const text = await data.text();
+        try {
+          const errJson = JSON.parse(text);
+          alert(`Export failed: ${errJson.detail || 'Access denied or invalid request'}`);
+        } catch(e) {
+          alert('Failed to export applications to CSV.');
+        }
+        return;
+      }
+
       const blob = new Blob([data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -85,8 +98,17 @@ export default function AdminApplicationsGrid() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Export CSV error:', err);
+      if (err.response && err.response.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          alert(`Export Error: ${parsed.detail || 'Server error'}`);
+          return;
+        } catch (e) {}
+      }
       alert('Failed to export applications to CSV.');
     }
   };
