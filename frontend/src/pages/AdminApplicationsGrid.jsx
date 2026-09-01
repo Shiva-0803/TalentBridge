@@ -74,45 +74,6 @@ export default function AdminApplicationsGrid() {
     }
   };
 
-  const handleExportCsv = async () => {
-    try {
-      const data = await applicationService.exportCsv({ requisition_id: selectedReqId || null });
-      
-      // If server returned error JSON wrapped in Blob
-      if (data && data.type === 'application/json') {
-        const text = await data.text();
-        try {
-          const errJson = JSON.parse(text);
-          alert(`Export failed: ${errJson.detail || 'Access denied or invalid request'}`);
-        } catch(e) {
-          alert('Failed to export applications to CSV.');
-        }
-        return;
-      }
-
-      const blob = new Blob([data], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `applications_${selectedReqId ? `req_${selectedReqId}` : 'all'}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export CSV error:', err);
-      if (err.response && err.response.data instanceof Blob) {
-        try {
-          const text = await err.response.data.text();
-          const parsed = JSON.parse(text);
-          alert(`Export Error: ${parsed.detail || 'Server error'}`);
-          return;
-        } catch (e) {}
-      }
-      alert('Failed to export applications to CSV.');
-    }
-  };
-
   const activeReq = requisitions.find(r => r.id === selectedReqId);
 
   return (
@@ -132,14 +93,6 @@ export default function AdminApplicationsGrid() {
               {activeReq ? `Requisition Code: ${activeReq.requisition_id} • ${applications.length} candidate(s) received` : 'Consolidated view of all candidate applications across job openings.'}
             </p>
           </div>
-
-          <button
-            onClick={handleExportCsv}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 shrink-0 self-start sm:self-auto"
-            title="Download CSV spreadsheet of applications"
-          >
-            <Download className="w-4 h-4" /> Export CSV
-          </button>
         </div>
 
         {/* Filter Controls matching Wireframe 8.8 */}
