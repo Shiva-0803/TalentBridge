@@ -537,6 +537,7 @@ async def update_resume(
         "resume_file_name": app.resume_file_name
     }
 
+@router.get("/export-csv")
 @router.get("/admin/export-csv")
 def export_applications_csv(
     requisition_id: Optional[int] = Query(None),
@@ -546,44 +547,55 @@ def export_applications_csv(
     """
     FR-ADM-05 Admin can export the applications grid for a requisition to CSV.
     """
-    query = db.query(Application)
-    if requisition_id:
-        query = query.filter(Application.requisition_id == requisition_id)
+    try:
+        query = db.query(Application)
+        if requisition_id:
+            query = query.filter(Application.requisition_id == requisition_id)
 
-    apps = query.order_by(Application.submitted_at.desc()).all()
+        apps = query.order_by(Application.submitted_at.desc()).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([
-        "Application ID", "Requisition Code", "Job Title", "Candidate Name",
-        "Email", "Mobile", "Location", "Experience", "Status", "Submitted Date", "Resume Filename"
-    ])
-
-    for app in apps:
-        candidate = db.query(User).filter(User.id == app.candidate_id).first()
-        profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == app.candidate_id).first()
-        req = db.query(JobRequisition).filter(JobRequisition.id == app.requisition_id).first()
-        work_exps = db.query(WorkExperienceRecord).filter(WorkExperienceRecord.application_id == app.id).all()
-        total_years = sum(w.years_calculated for w in work_exps) if work_exps else 0.0
-
+        output = io.StringIO()
+        writer = csv.writer(output)
         writer.writerow([
-            app.application_code,
-            req.requisition_id if req else "N/A",
-            req.job_title if req else "N/A",
-            f"{candidate.first_name} {candidate.last_name}" if candidate else "N/A",
-            candidate.email if candidate else "N/A",
-            profile.mobile if profile else "N/A",
-            profile.current_location if profile else "N/A",
-            f"{round(total_years, 1)} yrs" if total_years > 0 else "Fresher",
-            app.status,
-            app.submitted_at.strftime("%Y-%m-%d %H:%M:%S"),
-            app.resume_file_name
+            "Application ID", "Requisition Code", "Job Title", "Candidate Name",
+            "Email", "Mobile", "Location", "Experience", "Status", "Submitted Date", "Resume Filename"
         ])
 
-    output.seek(0)
-    filename = f"applications_export_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    return StreamingResponse(
-        io.BytesIO(output.getvalue().encode('utf-8')),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
+        for app in apps:
+            candidate = db.query(User).filter(User.id == app.candidate_id).first()
+            profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == app.candidate_id).first() if candidate else None
+            req = db.query(JobRequisition).filter(JobRequisition.id == app.requisition_id).first()
+            work_exps = db.query(WorkExperienceRecord).filter(WorkExperienceRecord.application_id == app.id).all()
+            total_years = sum(w.years_calculated for w in work_exps) if work_exps else 0.0
+
+            submitted_str = "N/A"
+            if app.submitted_at:
+                if hasattr(app.submitted_at, 'strftime'):
+                    submitted_str = app.submitted_at.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    submitted_str = str(app.submitted_at)
+
+            writer.writerow([
+                app.application_code or "N/A",
+                req.requisition_id if req else "N/A",
+                req.job_title if req else "N/A",
+                f"{candidate.first_name} {candidate.last_name}".strip() if candidate else "N/A",
+                candidate.email if candidate else "N/A",
+                profile.mobile if (profile and profile.mobile) else "N/A",
+                profile.current_location if (profile and profile.current_location) else "N/A",
+                f"{round(total_years, 1)} yrs" if total_years > 0 else "Fresher",
+                app.status or "New",
+                submitted_str,
+                app.resume_file_name or "N/A"
+            ])
+
+        output.seek(0)
+        filename = f"applications_export_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        print(f"[EXPORT CSV ERROR] {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate CSV export: {str(e)}")
